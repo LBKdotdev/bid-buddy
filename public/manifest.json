@@ -1,0 +1,10 @@
+{
+  "name": "Bid Buddy",
+  "short_name": "Bid Buddy",
+  "description": "NPA San Diego inventory triage and auction-day lookup",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F5F5F7",
+  "theme_color": "#F5F5F7",
+  "orientation": "portrait"
+}

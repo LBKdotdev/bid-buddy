@@ -1,0 +1,166 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-surface-900 text-zinc-300;
+    font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  h1, h2, h3 {
+    @apply font-semibold text-white tracking-tight;
+  }
+
+  h4, h5, h6 {
+    @apply font-medium text-zinc-100;
+  }
+}
+
+@layer components {
+  /* Premium card with subtle gradient and glow */
+  .card {
+    @apply bg-surface-700 rounded-xl border border-surface-500/50;
+    background: linear-gradient(180deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0) 100%), #111114;
+  }
+
+  .card-interactive {
+    @apply bg-surface-700 rounded-xl border border-surface-500/50 transition-all duration-300;
+    background: linear-gradient(180deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0) 100%), #111114;
+  }
+
+  .card-interactive:active {
+    @apply border-electric/30 scale-[0.98];
+    box-shadow: 0 0 30px -10px rgba(212, 255, 0, 0.2);
+  }
+
+  /* Premium primary button with glow */
+  .btn-primary {
+    @apply relative bg-electric text-surface-900 font-semibold py-3.5 px-7 rounded-xl transition-all duration-300 overflow-hidden;
+    box-shadow: 0 0 30px -8px rgba(212, 255, 0, 0.4);
+  }
+
+  .btn-primary::before {
+    content: '';
+    @apply absolute inset-0 bg-gradient-to-b from-white/20 to-transparent;
+  }
+
+  .btn-primary:active {
+    @apply scale-[0.97];
+    box-shadow: 0 0 50px -5px rgba(212, 255, 0, 0.5);
+  }
+
+  /* Secondary button - subtle */
+  .btn-secondary {
+    @apply bg-surface-600 text-zinc-200 font-medium py-3.5 px-7 rounded-xl border border-surface-500 transition-all duration-300;
+  }
+
+  .btn-secondary:active {
+    @apply bg-surface-500 scale-[0.98] border-surface-400;
+  }
+
+  /* Premium input field */
+  .input-field {
+    @apply w-full bg-surface-800 border border-surface-500/60 rounded-xl py-3.5 px-4 text-white placeholder-zinc-600 transition-all duration-300;
+  }
+
+  .input-field:focus {
+    @apply outline-none border-electric/50 bg-surface-700;
+    box-shadow: 0 0 30px -10px rgba(212, 255, 0, 0.2);
+  }
+
+  /* Status badges */
+  .status-interested {
+    @apply bg-status-success/15 text-status-success border border-status-success/20;
+  }
+
+  .status-maybe {
+    @apply bg-status-warning/15 text-status-warning border border-status-warning/20;
+  }
+
+  .status-pass {
+    @apply bg-status-danger/15 text-status-danger border border-status-danger/20;
+  }
+
+  .status-unreviewed {
+    @apply bg-surface-600 text-zinc-500 border border-surface-500;
+  }
+
+  /* Premium glow effects */
+  .glow {
+    box-shadow: 0 0 40px -10px rgba(212, 255, 0, 0.3);
+  }
+
+  .glow-sm {
+    box-shadow: 0 0 20px -5px rgba(212, 255, 0, 0.2);
+  }
+
+  /* Electric accent text */
+  .text-electric-glow {
+    @apply text-electric;
+    text-shadow: 0 0 20px rgba(212, 255, 0, 0.4);
+  }
+
+  /* Premium divider */
+  .divider {
+    @apply border-t border-surface-500/50;
+  }
+
+  /* Number display - large prominent numbers */
+  .number-display {
+    @apply font-semibold tracking-tight;
+    font-feature-settings: 'tnum' 1;
+  }
+}
+
+@layer utilities {
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  /* Tabular numbers for prices */
+  .tabular-nums {
+    font-feature-settings: 'tnum' 1;
+  }
+}
+
+/* iOS optimizations */
+@supports (-webkit-touch-callout: none) {
+  body {
+    overscroll-behavior: none;
+  }
+
+  .overflow-y-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  input, textarea, select {
+    font-size: 16px !important;
+  }
+}

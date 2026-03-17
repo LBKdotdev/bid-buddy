@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bid Buddy - Architecture</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #09090b; color: #e4e4e7; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; padding: 40px 20px; min-height: 100vh; }
+  .container { max-width: 1100px; margin: 0 auto; }
+  h1 { font-size: 28px; color: #d4ff00; margin-bottom: 6px; letter-spacing: -0.5px; }
+  .subtitle { color: #71717a; font-size: 14px; margin-bottom: 40px; }
+  .row { display: flex; gap: 20px; margin-bottom: 20px; flex-wrap: wrap; }
+  .col { flex: 1; min-width: 280px; }
+
+  .card { background: #18181b; border: 1px solid #27272a; border-radius: 16px; padding: 24px; position: relative; overflow: hidden; }
+  .card-glow { border-color: rgba(212,255,0,0.15); box-shadow: 0 0 30px rgba(212,255,0,0.03); }
+  .card h2 { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: #71717a; margin-bottom: 16px; font-weight: 600; }
+  .card h3 { font-size: 16px; color: #fafafa; margin-bottom: 4px; }
+  .card p { font-size: 13px; color: #a1a1aa; line-height: 1.5; }
+
+  .tag { display: inline-block; font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.5px; margin-right: 4px; margin-bottom: 4px; }
+  .tag-green { background: rgba(34,197,94,0.12); color: #4ade80; }
+  .tag-blue { background: rgba(59,130,246,0.12); color: #60a5fa; }
+  .tag-yellow { background: rgba(212,255,0,0.1); color: #d4ff00; }
+  .tag-purple { background: rgba(168,85,247,0.12); color: #c084fc; }
+  .tag-orange { background: rgba(251,146,60,0.12); color: #fb923c; }
+  .tag-red { background: rgba(239,68,68,0.12); color: #f87171; }
+
+  .flow { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #27272a; }
+  .flow:last-child { border-bottom: none; }
+  .flow-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+  .flow-label { font-size: 13px; color: #d4d4d8; font-weight: 500; }
+  .flow-desc { font-size: 11px; color: #71717a; }
+
+  .arrow-down { text-align: center; padding: 8px 0; color: #3f3f46; font-size: 20px; }
+
+  .diagram { text-align: center; padding: 30px 0; }
+  .layer { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin-bottom: 6px; }
+  .layer-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: #52525b; margin-bottom: 10px; font-weight: 600; }
+  .node { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 10px; font-size: 12px; font-weight: 500; }
+  .node-green { background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.2); color: #4ade80; }
+  .node-blue { background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.2); color: #60a5fa; }
+  .node-yellow { background: rgba(212,255,0,0.06); border: 1px solid rgba(212,255,0,0.15); color: #d4ff00; }
+  .node-purple { background: rgba(168,85,247,0.08); border: 1px solid rgba(168,85,247,0.2); color: #c084fc; }
+  .node-orange { background: rgba(251,146,60,0.08); border: 1px solid rgba(251,146,60,0.2); color: #fb923c; }
+  .node-zinc { background: rgba(113,113,122,0.08); border: 1px solid rgba(113,113,122,0.2); color: #a1a1aa; }
+
+  .connector { height: 30px; display: flex; align-items: center; justify-content: center; position: relative; }
+  .connector::before { content: ''; position: absolute; width: 1px; height: 100%; background: linear-gradient(to bottom, #3f3f46, #27272a); }
+  .connector-label { background: #18181b; padding: 2px 10px; font-size: 10px; color: #52525b; position: relative; z-index: 1; border-radius: 4px; }
+
+  .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 8px; }
+  .mini-card { background: #0f0f12; border: 1px solid #1e1e22; border-radius: 10px; padding: 12px; }
+  .mini-card h4 { font-size: 12px; color: #d4d4d8; margin-bottom: 2px; }
+  .mini-card p { font-size: 11px; color: #52525b; }
+
+  .stat { text-align: center; padding: 12px; }
+  .stat-num { font-size: 28px; font-weight: 700; color: #d4ff00; font-variant-numeric: tabular-nums; }
+  .stat-label { font-size: 11px; color: #71717a; margin-top: 2px; }
+
+  @media (max-width: 640px) {
+    body { padding: 20px 12px; }
+    .row { flex-direction: column; }
+    .col { min-width: 100%; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Bid Buddy Architecture</h1>
+  <p class="subtitle">NPA San Diego Auction Inventory Triage PWA</p>
+
+  <!-- Layer Diagram -->
+  <div class="card card-glow" style="margin-bottom: 24px;">
+    <h2>System Overview</h2>
+    <div class="diagram">
+
+      <div class="layer-label">User Interface</div>
+      <div class="layer">
+        <div class="node node-yellow">Home</div>
+        <div class="node node-yellow">Shortlist</div>
+        <div class="node node-yellow">Floor</div>
+        <div class="node node-yellow">Scan</div>
+        <div class="node node-yellow">Comps</div>
+        <div class="node node-yellow">Fee Calc</div>
+      </div>
+
+      <div class="connector"><span class="connector-label">React 18 + TypeScript</span></div>
+
+      <div class="layer-label">Client Services</div>
+      <div class="layer">
+        <div class="node node-purple">AI Estimate</div>
+        <div class="node node-green">Multi-Source Comps</div>
+        <div class="node node-blue">PDF Parser</div>
+        <div class="node node-orange">CSV Import</div>
+      </div>
+
+      <div class="connector"><span class="connector-label">IndexedDB + LocalStorage Cache</span></div>
+
+      <div class="layer-label">Edge Proxy Layer</div>
+      <div class="layer">
+        <div class="node node-zinc">fetch-npa-inventory</div>
+        <div class="node node-zinc">fetch-comps</div>
+        <div class="node node-zinc">scan-tag</div>
+      </div>
+
+      <div class="connector"><span class="connector-label">Supabase Edge Functions (Deno)</span></div>
+
+      <div class="layer-label">External APIs</div>
+      <div class="layer">
+        <div class="node node-orange">NPA Auctions</div>
+        <div class="node node-blue">eBay Motors</div>
+        <div class="node node-green">CycleTrader</div>
+        <div class="node node-purple">Craigslist</div>
+        <div class="node node-purple">Groq AI</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- Data Flow -->
+    <div class="col">
+      <div class="card" style="margin-bottom: 20px;">
+        <h2>Data Flow: Inventory Sync</h2>
+        <div class="flow">
+          <div class="flow-icon" style="background: rgba(212,255,0,0.08);">1</div>
+          <div>
+            <div class="flow-label">User taps "Sync Inventory"</div>
+            <div class="flow-desc">HomeScreen.tsx triggers handleSync()</div>
+          </div>
+        </div>
+        <div class="flow">
+          <div class="flow-icon" style="background: rgba(113,113,122,0.08);">2</div>
+          <div>
+            <div class="flow-label">Supabase Edge Function</div>
+            <div class="flow-desc">fetch-npa-inventory proxies to GCP Cloud Run</div>
+          </div>
+        </div>
+        <div class="flow">
+          <div class="flow-icon" style="background: rgba(251,146,60,0.08);">3</div>
+          <div>
+            <div class="flow-label">NPA API returns AuctionItem[]</div>
+            <div class="flow-desc">year, make, model, VIN, score, mileage, docs</div>
+          </div>
+        </div>
+        <div class="flow">
+          <div class="flow-icon" style="background: rgba(59,130,246,0.08);">4</div>
+          <div>
+            <div class="flow-label">Map to InventoryItem, preserve status</div>
+            <div class="flow-desc">Existing buddyTag/notes/maxBid kept on re-sync</div>
+          </div>
+        </div>
+        <div class="flow">
+          <div class="flow-icon" style="background: rgba(34,197,94,0.08);">5</div>
+          <div>
+            <div class="flow-label">Save to IndexedDB</div>
+            <div class="flow-desc">lbk-bid-buddy store, indexed by itemNumber</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Data Flow: Comps Lookup</h2>
+        <div class="flow">
+          <div class="flow-icon" style="background: rgba(34,197,94,0.08);">1</div>
+          <div>
+            <div class="flow-label">Check LocalStorage cache</div>
+            <div class="flow-desc">comps-v3-{query}, 30min expiry</div>
+          </div>
+        </div>
+        <div class="flow">
+          <div class="flow-icon" style="background: rgba(113,113,122,0.08);">2</div>
+          <div>
+            <div class="flow-label">Cache miss? Call fetch-comps</div>
+            <div class="flow-desc">Supabase edge function (POST { query })</div>
+          </div>
+        </div>
+        <div class="flow">
+          <div class="flow-icon" style="background: rgba(168,85,247,0.08);">3</div>
+          <div>
+            <div class="flow-label">Parallel scraping</div>
+            <div class="flow-desc">eBay sold + CycleTrader + 4x Craigslist cities</div>
+          </div>
+        </div>
+        <div class="flow">
+          <div class="flow-icon" style="background: rgba(212,255,0,0.08);">4</div>
+          <div>
+            <div class="flow-label">Aggregate & cache results</div>
+            <div class="flow-desc">Sort by price, variant filter, never cache empty</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column -->
+    <div class="col">
+      <div class="card" style="margin-bottom: 20px;">
+        <h2>Tech Stack</h2>
+        <div class="grid-3">
+          <div class="mini-card">
+            <h4>React 18</h4>
+            <p>UI framework</p>
+          </div>
+          <div class="mini-card">
+            <h4>TypeScript</h4>
+            <p>Type safety</p>
+          </div>
+          <div class="mini-card">
+            <h4>Vite</h4>
+            <p>Build tool</p>
+          </div>
+          <div class="mini-card">
+            <h4>Tailwind 3</h4>
+            <p>Styling</p>
+          </div>
+          <div class="mini-card">
+            <h4>IndexedDB</h4>
+            <p>Client storage</p>
+          </div>
+          <div class="mini-card">
+            <h4>Supabase</h4>
+            <p>Edge proxy only</p>
+          </div>
+          <div class="mini-card">
+            <h4>Groq AI</h4>
+            <p>LLaMA Scout</p>
+          </div>
+          <div class="mini-card">
+            <h4>pdfjs-dist</h4>
+            <p>Catalog parsing</p>
+          </div>
+          <div class="mini-card">
+            <h4>Vercel</h4>
+            <p>Deployment</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom: 20px;">
+        <h2>Storage Architecture</h2>
+        <div style="margin-bottom: 16px;">
+          <span class="tag tag-yellow">IndexedDB</span>
+          <span class="tag tag-blue">Primary</span>
+          <p style="margin-top: 8px;">Database: <code style="color:#d4ff00; font-size:12px;">lbk-bid-buddy</code></p>
+          <p>Store: <code style="color:#a1a1aa; font-size:12px;">inventory</code> (id, itemNumber, category, status, updatedAt)</p>
+        </div>
+        <div style="margin-bottom: 16px;">
+          <span class="tag tag-green">LocalStorage</span>
+          <span class="tag tag-purple">Cache</span>
+          <p style="margin-top: 8px;">Comps results (30min), import metadata, recent calcs</p>
+        </div>
+        <div>
+          <span class="tag tag-red">No Server DB</span>
+          <p style="margin-top: 8px;">All data lives in browser. Supabase has zero persistent tables.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>External Dependencies</h2>
+        <div class="flow">
+          <div class="flow-icon" style="background: rgba(251,146,60,0.12);">
+            <span style="font-size:12px;">NPA</span>
+          </div>
+          <div>
+            <div class="flow-label">NPA Auctions API</div>
+            <div class="flow-desc">GCP Cloud Run &bull; inventory data</div>
+          </div>
+        </div>
+        <div class="flow">
+          <div class="flow-icon" style="background: rgba(168,85,247,0.12);">
+            <span style="font-size:14px;">AI</span>
+          </div>
+          <div>
+            <div class="flow-label">Groq (LLaMA Scout)</div>
+            <div class="flow-desc">Price estimates &bull; OCR scanning</div>
+          </div>
+        </div>
+        <div class="flow">
+          <div class="flow-icon" style="background: rgba(59,130,246,0.12);">
+            <span style="font-size:14px;">eB</span>
+          </div>
+          <div>
+            <div class="flow-label">eBay Motors (sold)</div>
+            <div class="flow-desc">HTML scraping via edge function</div>
+          </div>
+        </div>
+        <div class="flow">
+          <div class="flow-icon" style="background: rgba(34,197,94,0.12);">
+            <span style="font-size:14px;">CT</span>
+          </div>
+          <div>
+            <div class="flow-label">CycleTrader</div>
+            <div class="flow-desc">JSON extraction from initial state</div>
+          </div>
+        </div>
+        <div class="flow">
+          <div class="flow-icon" style="background: rgba(239,68,68,0.12);">
+            <span style="font-size:14px;">CL</span>
+          </div>
+          <div>
+            <div class="flow-label">Craigslist (6 cities)</div>
+            <div class="flow-desc">LA, SD, PHX, LV, OC, Inland Empire</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="text-align:center; padding: 30px 0; color: #3f3f46; font-size: 12px;">
+    Bid Buddy &bull; LBK &bull; NPA San Diego
+  </div>
+</div>
+</body>
+</html>
