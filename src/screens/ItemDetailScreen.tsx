@@ -635,7 +635,7 @@ Be brutally honest. Include year-specific problems. No generic advice like "chec
 
   return (
     <div className="fixed inset-0 bg-surface-900 z-50 overflow-y-auto">
-      <div className="bg-surface-800 border-b border-surface-500/30 sticky top-0 z-10">
+      <div className="bg-surface-800 border-b border-surface-500/30 sticky top-0 z-10" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
         <div className="flex items-center justify-between px-4 py-3">
           <button onClick={onClose} className="text-electric font-medium">
             Cancel
