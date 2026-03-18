@@ -419,7 +419,7 @@ export default function ItemDetailScreen({ itemId, onClose }: ItemDetailScreenPr
         setReportContent({
           multiComps: null,
           noComps: true,
-          message: `No sold listings found for "${searchQuery}". Try Copy Query and search eBay manually.`,
+          message: `No listings found for "${specific}". Try Deep Search or Copy Query to search manually.`,
         });
       }
     } catch (error) {
