@@ -8,6 +8,8 @@ import { parseCompsCSV, calculateCompsSummary } from '../utils/comps';
 import { Comp, CompsResult } from '../types/comps';
 import { getAIEstimate, type EstimateResult } from '../services/aiEstimate';
 import { searchCompsWithCache, clearCompsCache, type Comp as MarketComp, type MultiSourceResult } from '../services/multiSourceComps';
+import { getKnownIssues, type KnownIssuesResult } from '../services/knownIssues';
+import type { CachedIssues } from '../types/inventory';
 
 interface ItemDetailScreenProps {
   itemId: string;
@@ -87,6 +89,9 @@ export default function ItemDetailScreen({ itemId, onClose }: ItemDetailScreenPr
         // Auto-fetch Craigslist comps (~$0.02) so the first number they see is real
         // Trust > pennies — a bad first impression kills the tool
         autoFetchComps(found);
+
+        // Auto-fetch known issues (NHTSA free + Groq cached 24hr)
+        autoFetchIssues(found);
       }
     } catch (error) {
       console.error('Load error:', error);
@@ -127,6 +132,31 @@ export default function ItemDetailScreen({ itemId, onClose }: ItemDetailScreenPr
 
   // Auto-fetch comps on item open via Craigslist (~$0.02, fast)
   // Silently upgrades bid card from AI placeholder to real listing data
+  const autoFetchIssues = async (itemData: InventoryItem) => {
+    // Skip if cached and fresh (< 24 hours)
+    if (itemData.cachedIssues && Date.now() - itemData.cachedIssues.fetchedAt < 24 * 60 * 60 * 1000) {
+      return; // Data ready — will display instantly when they tap Issues
+    }
+
+    try {
+      const result = await getKnownIssues(
+        itemData.year,
+        itemData.make,
+        itemData.model,
+        itemData.milesHours
+      );
+
+      const cached: CachedIssues = { ...result, fetchedAt: Date.now() };
+
+      // Cache to IndexedDB silently — don't switch the active report
+      const updated = { ...itemData, cachedIssues: cached, updatedAt: Date.now() };
+      await saveItem(updated);
+      setItem(updated);
+    } catch (e) {
+      console.error('Auto-fetch issues error:', e);
+    }
+  };
+
   const autoFetchComps = async (itemData: InventoryItem) => {
     try {
       // Search specific variant first (e.g. "CAN-AM RYKER 600")
@@ -498,82 +528,45 @@ export default function ItemDetailScreen({ itemId, onClose }: ItemDetailScreenPr
 
   const handleKnownIssues = async () => {
     if (!item) return;
+
+    // Use cached issues if fresh (< 24 hours)
+    if (item.cachedIssues && Date.now() - item.cachedIssues.fetchedAt < 24 * 60 * 60 * 1000) {
+      setReportContent(item.cachedIssues);
+      setActiveReport('issues');
+      return;
+    }
+
     setSayBrahLoading(true);
     setActiveReport('issues');
 
-    const vehicleDesc = `${item.year || ''} ${item.make} ${item.model}`.trim();
-    const geminiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    try {
+      const result = await getKnownIssues(
+        item.year,
+        item.make,
+        item.model,
+        item.milesHours
+      );
 
-    if (geminiKey) {
-      try {
-        const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{
-                parts: [{
-                  text: `You are an expert powersports mechanic specializing in motorcycles, ATVs, and three-wheelers. I'm considering buying a USED ${vehicleDesc} at auction.
+      const cached: CachedIssues = { ...result, fetchedAt: Date.now() };
+      setReportContent(cached);
 
-List the TOP 6 most important problems and red flags for THIS SPECIFIC vehicle:
-
-MUST INCLUDE IF APPLICABLE:
-- Year-specific recalls (NHTSA recalls for this model year)
-- Chronic/known defects (bad transmissions, overheating issues, electrical gremlins)
-- Model years to avoid vs good years
-- Common mechanical failures and at what mileage
-- Parts that are expensive to replace or hard to find
-- Specific inspection points for auction buyers
-
-For each issue, explain WHY it matters and what to physically check.
-
-Respond ONLY with valid JSON array:
-[
-  {"issue": "<specific problem>", "detail": "<what to check and why it matters>", "severity": "<high/medium/low>"},
-  ...
-]
-
-Be brutally honest. Include year-specific problems. No generic advice like "check the tires".`
-                }]
-              }],
-              generationConfig: {
-                temperature: 0.3,
-                maxOutputTokens: 800,
-              },
-            }),
-          }
-        );
-
-        if (response.ok) {
-          const data = await response.json();
-          const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (text) {
-            const jsonMatch = text.match(/\[[\s\S]*\]/);
-            if (jsonMatch) {
-              const issues = JSON.parse(jsonMatch[0]);
-              setReportContent({ issues, vehicle: vehicleDesc, source: 'gemini' });
-              setSayBrahLoading(false);
-              return;
-            }
-          }
-        }
-      } catch (e) {
-        console.error('Gemini issues error:', e);
-      }
+      // Cache to IndexedDB
+      const updated = { ...item, cachedIssues: cached, updatedAt: Date.now() };
+      await saveItem(updated);
+      setItem(updated);
+    } catch (e) {
+      console.error('Known issues error:', e);
+      setReportContent({
+        recalls: [],
+        commonIssues: [
+          { issue: 'Could not load issues', detail: 'Check your connection and try again.', severity: 'medium' },
+        ],
+        vehicle: `${item.year || ''} ${item.make} ${item.model}`.trim(),
+        source: 'fallback',
+        fetchedAt: 0,
+      });
     }
 
-    // Fallback to basic issues
-    setReportContent({
-      issues: [
-        { issue: 'Battery condition', detail: 'Check voltage and load test the battery', severity: 'medium' },
-        { issue: 'Tire wear and age', detail: 'Look for dry rot, uneven wear, and manufacture date', severity: 'medium' },
-        { issue: 'Brake system', detail: 'Check pad thickness, rotor condition, and brake fluid', severity: 'high' },
-        { issue: 'Service history', detail: 'Verify maintenance records and interval compliance', severity: 'medium' },
-      ],
-      vehicle: vehicleDesc,
-      source: 'fallback'
-    });
     setSayBrahLoading(false);
   };
 
@@ -718,13 +711,34 @@ Be brutally honest. Include year-specific problems. No generic advice like "chec
                   <div className="text-status-success font-medium">{item.docs}</div>
                 </div>
               )}
-              {item.crScore !== null && (
-                <div>
-                  <div className="text-zinc-500 text-xs">CR Score</div>
-                  <div className="text-white font-medium">{item.crScore}</div>
-                </div>
-              )}
             </div>
+
+            {/* CR Score — prominent display */}
+            {item.crScore !== null && (
+              <div className={`mt-3 rounded-xl p-3 flex items-center justify-between ${
+                item.crScore >= 4 ? 'bg-status-success/10 border border-status-success/30' :
+                item.crScore >= 3 ? 'bg-status-warning/10 border border-status-warning/30' :
+                'bg-status-danger/10 border border-status-danger/30'
+              }`}>
+                <div>
+                  <div className="text-zinc-400 text-xs font-medium uppercase tracking-wide">Condition Rating</div>
+                  <div className="text-zinc-500 text-xs mt-0.5">
+                    {item.crScore >= 4.5 ? 'Excellent — minimal wear' :
+                     item.crScore >= 4 ? 'Good — light wear, well maintained' :
+                     item.crScore >= 3 ? 'Fair — moderate wear, may need work' :
+                     item.crScore >= 2 ? 'Rough — significant wear, expect repairs' :
+                     'Poor — major issues likely'}
+                  </div>
+                </div>
+                <div className={`text-3xl font-bold tabular-nums ${
+                  item.crScore >= 4 ? 'text-status-success' :
+                  item.crScore >= 3 ? 'text-status-warning' :
+                  'text-status-danger'
+                }`}>
+                  {item.crScore}
+                </div>
+              </div>
+            )}
 
             {item.sourceUrl && (
               <a
@@ -1081,22 +1095,39 @@ Be brutally honest. Include year-specific problems. No generic advice like "chec
           )}
 
           {/* Primary actions — always visible */}
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-3 gap-2">
             <button
               onClick={() => handleRunComps(false)}
               disabled={sayBrahLoading}
-              className="btn-primary py-3 disabled:opacity-50 flex items-center justify-center gap-2 font-semibold"
+              className="btn-primary py-3 disabled:opacity-50 flex items-center justify-center gap-1.5 font-semibold"
             >
               {compsLoading && !sayBrahLoading ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />}
-              Run Comps
+              Comps
             </button>
             <button
               onClick={() => handleRunComps(false, true)}
               disabled={sayBrahLoading}
-              className="btn-secondary py-3 disabled:opacity-50 flex items-center justify-center gap-2 font-medium"
+              className="btn-secondary py-3 disabled:opacity-50 flex items-center justify-center gap-1.5 font-medium"
             >
               {compsLoading ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />}
-              Deep Search
+              Deep
+            </button>
+            <button
+              onClick={handleKnownIssues}
+              disabled={sayBrahLoading}
+              className={`py-3 disabled:opacity-50 flex items-center justify-center gap-1.5 font-medium relative ${
+                item?.cachedIssues?.recalls && item.cachedIssues.recalls.length > 0
+                  ? 'btn-secondary !border-status-danger/50 !text-status-danger'
+                  : 'btn-secondary text-status-warning'
+              }`}
+            >
+              {sayBrahLoading && activeReport === 'issues' ? <Loader2 size={16} className="animate-spin" /> : <span>⚠</span>}
+              {item?.cachedIssues?.recalls && item.cachedIssues.recalls.length > 0
+                ? `${item.cachedIssues.recalls.length} Recall${item.cachedIssues.recalls.length > 1 ? 's' : ''}`
+                : item?.cachedIssues
+                  ? 'No Recalls'
+                  : 'Issues'
+              }
             </button>
           </div>
 
@@ -1134,26 +1165,19 @@ Be brutally honest. Include year-specific problems. No generic advice like "chec
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <button
-                    onClick={handleKnownIssues}
-                    disabled={sayBrahLoading}
-                    className="btn-secondary text-sm py-2 disabled:opacity-50"
-                  >
-                    Known Issues
-                  </button>
-                  <button
                     onClick={handleRiskScore}
                     disabled={sayBrahLoading}
                     className="btn-secondary text-sm py-2 disabled:opacity-50"
                   >
                     Risk Score
                   </button>
+                  <button
+                    onClick={() => { clearCompsCache(); setMultiComps(null); }}
+                    className="btn-secondary text-sm py-2 text-zinc-500"
+                  >
+                    Clear Cache
+                  </button>
                 </div>
-                <button
-                  onClick={() => { clearCompsCache(); setMultiComps(null); }}
-                  className="w-full text-xs text-zinc-600 py-1 active:text-zinc-400"
-                >
-                  Clear cached data
-                </button>
               </div>
             )}
           </div>
@@ -1348,23 +1372,67 @@ Be brutally honest. Include year-specific problems. No generic advice like "chec
           )}
 
           {!sayBrahLoading && reportContent && activeReport === 'issues' && (
-            <div className="card p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-semibold text-white">Known Issues</h3>
-                {reportContent.source === 'gemini' && (
-                  <span className="text-xs text-electric bg-electric/10 px-2 py-0.5 rounded">AI Powered</span>
+            <div className="space-y-4">
+              {/* NHTSA Recalls Section */}
+              <div className="card p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold text-white flex items-center gap-2">
+                    <span className="text-status-danger">⚠</span> NHTSA Recalls
+                  </h3>
+                  <span className="text-xs text-zinc-500 bg-surface-600 px-2 py-0.5 rounded">Official Data</span>
+                </div>
+                {reportContent.vehicle && (
+                  <div className="text-sm text-zinc-500 mb-3">{reportContent.vehicle}</div>
+                )}
+                {reportContent.recalls && reportContent.recalls.length > 0 ? (
+                  <div className="space-y-3">
+                    {reportContent.recalls.map((recall: any, idx: number) => (
+                      <div key={idx} className="bg-surface-600 rounded-xl p-3 border-l-2 border-status-danger">
+                        <div className="flex items-start justify-between gap-2 mb-1">
+                          <span className="font-medium text-white text-sm">{recall.component}</span>
+                          <span className="text-xs bg-status-danger/20 text-status-danger px-2 py-0.5 rounded-full font-medium flex-shrink-0">
+                            recall
+                          </span>
+                        </div>
+                        <p className="text-xs text-zinc-400 mb-2">{recall.summary}</p>
+                        {recall.consequence && (
+                          <p className="text-xs text-status-warning/80"><span className="font-medium">Risk:</span> {recall.consequence}</p>
+                        )}
+                        {recall.remedy && (
+                          <p className="text-xs text-status-success/80 mt-1"><span className="font-medium">Fix:</span> {recall.remedy}</p>
+                        )}
+                        <div className="flex items-center gap-3 mt-2">
+                          {recall.nhtsaCampaignNumber && (
+                            <span className="text-[10px] text-zinc-600">Campaign: {recall.nhtsaCampaignNumber}</span>
+                          )}
+                          {recall.reportDate && (
+                            <span className="text-[10px] text-zinc-600">{recall.reportDate}</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-surface-600 rounded-xl p-3 text-sm text-status-success/80 flex items-center gap-2">
+                    <span>✓</span> No NHTSA recalls found for this vehicle
+                  </div>
                 )}
               </div>
-              {reportContent.vehicle && (
-                <div className="text-sm text-zinc-500 mb-3">{reportContent.vehicle}</div>
-              )}
-              <div className="space-y-3">
-                {reportContent.issues.map((issue: { issue: string; detail: string; severity: string } | string, idx: number) => (
-                  typeof issue === 'string' ? (
-                    <div key={idx} className="bg-surface-600 rounded-xl p-3 text-sm text-zinc-300">
-                      {issue}
-                    </div>
-                  ) : (
+
+              {/* Common Issues Section (Groq AI) */}
+              <div className="card p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold text-white">Common Problems</h3>
+                  <span className={`text-xs px-2 py-0.5 rounded ${
+                    reportContent.source === 'groq'
+                      ? 'text-electric bg-electric/10'
+                      : 'text-zinc-500 bg-surface-600'
+                  }`}>
+                    {reportContent.source === 'groq' ? 'AI Powered' : 'Basic Info'}
+                  </span>
+                </div>
+                <div className="space-y-3">
+                  {(reportContent.commonIssues || []).map((issue: { issue: string; detail: string; severity: string }, idx: number) => (
                     <div key={idx} className="bg-surface-600 rounded-xl p-3">
                       <div className="flex items-start justify-between gap-2 mb-1">
                         <span className="font-medium text-white text-sm">{issue.issue}</span>
@@ -1378,8 +1446,8 @@ Be brutally honest. Include year-specific problems. No generic advice like "chec
                       </div>
                       <p className="text-xs text-zinc-400">{issue.detail}</p>
                     </div>
-                  )
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
           )}

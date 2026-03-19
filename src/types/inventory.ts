@@ -19,6 +19,29 @@ export interface CachedComps {
   fetchedAt: number;
 }
 
+export interface NHTSARecall {
+  nhtsaCampaignNumber: string;
+  component: string;
+  summary: string;
+  consequence: string;
+  remedy: string;
+  reportDate: string;
+}
+
+export interface CommonIssue {
+  issue: string;
+  detail: string;
+  severity: 'high' | 'medium' | 'low';
+}
+
+export interface CachedIssues {
+  recalls: NHTSARecall[];
+  commonIssues: CommonIssue[];
+  vehicle: string;
+  source: 'groq' | 'fallback';
+  fetchedAt: number;
+}
+
 export interface InventoryItem {
   id: string;
   itemNumber: string;
@@ -41,6 +64,7 @@ export interface InventoryItem {
   updatedAt: number;
   cachedEstimate?: CachedEstimate;
   cachedComps?: CachedComps;
+  cachedIssues?: CachedIssues;
 }
 
 export interface CSVRow {

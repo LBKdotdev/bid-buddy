@@ -1,3 +1,5 @@
+import { shouldThrottleGroq, updateFromHeaders } from './groqRateLimit';
+
 export interface PriceEstimate {
   low: number;
   mid: number;
@@ -227,6 +229,8 @@ Be specific and accurate. Do not use placeholder values.`
       return null;
     }
 
+    updateFromHeaders(response.headers);
+
     const data = await response.json();
     const text = data.choices?.[0]?.message?.content;
 
@@ -254,8 +258,8 @@ export async function getAIEstimate(
   const vehicleDesc = `${year || ''} ${make} ${model}`.trim();
   const mileageInfo = mileage ? ` with ${mileage} miles` : '';
 
-  // Try Groq API directly
-  if (groqKey) {
+  // Try Groq API directly (skip if rate-limited to preserve quota for other services)
+  if (groqKey && !shouldThrottleGroq()) {
     try {
       console.log('Calling Groq for estimate...');
       const estimate = await getGroqEstimate(groqKey, vehicleDesc, mileageInfo, condition);
