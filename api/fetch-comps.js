@@ -273,7 +273,10 @@ export default async function handler(req, res) {
       else if (source === 'craigslist') clComps.push(...comps);
     }
 
-    const allComps = [...ebayComps, ...fbComps, ...clComps].sort((a, b) => a.price - b.price);
+    // Filter out obvious parts listings (under $500)
+    const allComps = [...ebayComps, ...fbComps, ...clComps]
+      .filter(c => c.price >= 500)
+      .sort((a, b) => a.price - b.price);
 
     return res.status(200).json({
       comps: allComps,
