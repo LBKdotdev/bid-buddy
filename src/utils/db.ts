@@ -1,16 +1,10 @@
 import type { InventoryItem, Category } from '../types/inventory';
-import { createClient } from '@supabase/supabase-js';
 
 const DB_NAME = 'lbk-bid-buddy';
 const DB_VERSION = 1;
 const STORE_NAME = 'inventory';
 
 let db: IDBDatabase | null = null;
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export async function initDB(): Promise<IDBDatabase> {
   if (db) return db;

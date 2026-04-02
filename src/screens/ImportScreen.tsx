@@ -23,13 +23,7 @@ export default function ImportScreen({ onImportSuccess, onViewInventory, onOpenC
 
     setImporting(true);
     try {
-      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/fetch-npa-inventory?limit=1000`;
-
-      const response = await fetch(apiUrl, {
-        headers: {
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-        },
-      });
+      const response = await fetch('/api/fetch-npa-inventory?limit=1000');
 
       if (!response.ok) {
         throw new Error(`API request failed: ${response.status}`);

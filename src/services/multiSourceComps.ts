@@ -25,26 +25,22 @@ export interface MultiSourceResult {
   apifyEnabled?: boolean;
 }
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
 type SourceKey = 'ebay' | 'facebook' | 'craigslist';
 
-// ========== Main Aggregator via Supabase Edge Function ==========
+// ========== Main Aggregator via Vercel Serverless Function ==========
 export async function searchAllSources(
   query: string,
   zip?: string,
   radius?: number,
   enabledSources?: SourceKey[],
 ): Promise<MultiSourceResult> {
-  console.log('Fetching comps via Supabase for:', query, 'zip:', zip, 'sources:', enabledSources);
+  console.log('Fetching comps for:', query, 'zip:', zip, 'sources:', enabledSources);
 
   try {
-    const response = await fetch(`${SUPABASE_URL}/functions/v1/fetch-comps`, {
+    const response = await fetch('/api/fetch-comps', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
       },
       body: JSON.stringify({
         query,

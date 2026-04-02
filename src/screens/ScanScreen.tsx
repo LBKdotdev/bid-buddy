@@ -30,19 +30,15 @@ export default function ScanScreen({ onSelectItem }: ScanScreenProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const scanWithAI = async (base64Image: string): Promise<ParsedTag> => {
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-    const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    console.log('Calling scan-tag API, image size:', Math.round(base64Image.length / 1024), 'KB');
 
-    console.log('Calling scan-tag edge function, image size:', Math.round(base64Image.length / 1024), 'KB');
-
-    // Try edge function first (Supabase edge function with Groq)
+    // Call Vercel serverless function
     try {
-      console.log('Trying Groq edge function...');
-      const response = await fetch(`${supabaseUrl}/functions/v1/scan-tag`, {
+      console.log('Trying Groq via Vercel...');
+      const response = await fetch('/api/scan-tag', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${supabaseKey}`,
         },
         body: JSON.stringify({ image: base64Image }),
       });

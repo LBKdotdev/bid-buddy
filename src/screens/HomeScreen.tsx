@@ -38,21 +38,7 @@ export default function HomeScreen({
   const handleSync = async () => {
     setSyncing(true);
     try {
-      const settings = getSettings();
-      let response: Response;
-
-      if (settings.syncMode === 'direct') {
-        // Direct mode: call NPA API without Supabase proxy
-        response = await fetch(`${settings.npaApiUrl}?limit=1000`);
-      } else {
-        // Supabase proxy mode (default)
-        const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/fetch-npa-inventory?limit=1000`;
-        response = await fetch(apiUrl, {
-          headers: {
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-          },
-        });
-      }
+      const response = await fetch('/api/fetch-npa-inventory?limit=1000');
 
       if (!response.ok) {
         throw new Error(`Sync failed: ${response.status}`);
