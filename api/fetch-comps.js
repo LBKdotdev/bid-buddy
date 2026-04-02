@@ -22,8 +22,8 @@ function withTimeout(promise, ms, fallback) {
 // Updated 2026-04: eBay switched from s-item to s-card classes
 async function fetchEbaySold(query) {
   const encodedQuery = encodeURIComponent(query);
-  // _sacat=6024 = eBay Motors (vehicles only, filters out parts)
-  const url = `https://www.ebay.com/sch/i.html?_nkw=${encodedQuery}&LH_Complete=1&LH_Sold=1&_sop=13&_ipg=60&rt=nc&_sacat=6024`;
+  // _sacat=6024 = eBay Motors, _udlo=500 = min $500 (filters out parts)
+  const url = `https://www.ebay.com/sch/i.html?_nkw=${encodedQuery}&LH_Complete=1&LH_Sold=1&_sop=13&_ipg=60&rt=nc&_sacat=6024&_udlo=500`;
 
   try {
     const response = await fetch(url, {
