@@ -19,14 +19,16 @@ function withTimeout(promise, ms, fallback) {
 }
 
 // eBay sold listings via HTML scraping (free)
+// Updated 2026-04: eBay switched from s-item to s-card classes
 async function fetchEbaySold(query) {
   const encodedQuery = encodeURIComponent(query);
-  const url = `https://www.ebay.com/sch/i.html?_nkw=${encodedQuery}&LH_Complete=1&LH_Sold=1&_sop=13&_ipg=120&rt=nc`;
+  // _sacat=6024 = eBay Motors (vehicles only, filters out parts)
+  const url = `https://www.ebay.com/sch/i.html?_nkw=${encodedQuery}&LH_Complete=1&LH_Sold=1&_sop=13&_ipg=60&rt=nc&_sacat=6024`;
 
   try {
     const response = await fetch(url, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
         'Accept-Language': 'en-US,en;q=0.9',
       },
@@ -36,32 +38,47 @@ async function fetchEbaySold(query) {
     const html = await response.text();
 
     const comps = [];
-    const itemRegex = /<li[^>]*class="[^"]*s-item[^"]*"[^>]*>([\s\S]*?)<\/li>/gi;
-    const items = html.match(itemRegex) || [];
+
+    // New structure (2026): s-card based layout
+    const cardRegex = /<div[^>]*class="[^"]*s-card\s[^"]*"[^>]*>([\s\S]*?)<\/div>\s*<\/div>\s*<\/div>\s*<\/li>/gi;
+    // Fallback: match li items containing s-card
+    const liRegex = /<li[^>]*>([\s\S]*?s-card[\s\S]*?)<\/li>/gi;
+    let items = html.match(cardRegex) || html.match(liRegex) || [];
+
+    // Also try the old s-item format as fallback
+    if (items.length === 0) {
+      const oldRegex = /<li[^>]*class="[^"]*s-item[^"]*"[^>]*>([\s\S]*?)<\/li>/gi;
+      items = html.match(oldRegex) || [];
+    }
 
     for (const item of items) {
       try {
         if (item.includes('SPONSORED')) continue;
 
-        const titleMatch = item.match(/<span[^>]*role="heading"[^>]*>([^<]+)<\/span>/i) ||
+        // New: s-card__title > span
+        const titleMatch = item.match(/s-card__title[^>]*>[^<]*<span[^>]*>([^<]+)<\/span>/i) ||
+                           item.match(/<span[^>]*role="heading"[^>]*>([^<]+)<\/span>/i) ||
                            item.match(/class="s-item__title"[^>]*>[\s\S]*?<span[^>]*>([^<]+)<\/span>/i);
         if (!titleMatch) continue;
         const title = decodeHtml(titleMatch[1].trim());
         if (title.toLowerCase().includes('shop on ebay') || title === 'New Listing') continue;
 
-        const priceMatch = item.match(/class="s-item__price"[^>]*>[\s\S]*?\$([0-9,]+\.?\d*)/i);
+        // New: s-card__price or old s-item__price
+        const priceMatch = item.match(/s-card__price[^>]*>\$([0-9,]+\.?\d*)/i) ||
+                           item.match(/class="s-item__price"[^>]*>[\s\S]*?\$([0-9,]+\.?\d*)/i);
         if (!priceMatch) continue;
         const price = parseFloat(priceMatch[1].replace(/,/g, ''));
         if (isNaN(price) || price <= 0) continue;
 
-        const urlMatch = item.match(/href="(https:\/\/www\.ebay\.com\/itm\/[^"]+)"/i);
+        // URL: new format uses href= without quotes sometimes
+        const urlMatch = item.match(/href="?(https:\/\/(?:www\.)?ebay\.com\/itm\/\d+)[^"'\s]*/i);
         const imageMatch = item.match(/src="(https:\/\/i\.ebayimg\.com\/[^"]+)"/i);
         const dateMatch = item.match(/Sold\s+([A-Za-z]+\s+\d+)/i);
 
         comps.push({
           title, price,
-          date: dateMatch ? dateMatch[1].trim() : 'Recently sold',
-          url: urlMatch ? urlMatch[1].split('?')[0] : '',
+          date: dateMatch ? dateMatch[1].trim() : 'Sold',
+          url: urlMatch ? urlMatch[1] : '',
           imageUrl: imageMatch ? imageMatch[1] : undefined,
           source: 'ebay',
         });
@@ -70,8 +87,9 @@ async function fetchEbaySold(query) {
 
     const seen = new Set();
     return comps.filter(c => {
-      if (!c.url || seen.has(c.url)) return false;
-      seen.add(c.url);
+      const key = c.url || c.title;
+      if (seen.has(key)) return false;
+      seen.add(key);
       return true;
     }).slice(0, 25);
   } catch (e) {
