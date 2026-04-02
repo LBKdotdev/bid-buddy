@@ -1,9 +1,9 @@
 import { useState, useRef } from 'react';
 import { Upload, FileUp, Download, Truck, Package, Calculator, Search, RotateCcw, Table } from 'lucide-react';
-import type { Category, InventoryItem } from '../types/inventory';
+import type { InventoryItem } from '../types/inventory';
 import { parseCSV, csvRowToInventoryItem } from '../utils/csv';
 import { parsePDF } from '../utils/pdfParser';
-import { saveItems, getItemsByCategory, getItem, deleteItemsByCategory } from '../utils/db';
+import { saveItems, getAllItems, getItem, deleteAllItems } from '../utils/db';
 
 interface ImportScreenProps {
   onImportSuccess: (items: any[], count: number, timestamp: string) => void;
@@ -19,8 +19,6 @@ interface ImportScreenProps {
 export default function ImportScreen({ onImportSuccess, onViewInventory, onOpenCalculator, onOpenKittyComps, onOpenAuctionData, onResetDemoData, lastImportCount, lastImportTime }: ImportScreenProps) {
   const [importing, setImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const selectedCategory: Category = 'motorcycles';
-
   const handleFetchFromAPI = async () => {
 
     setImporting(true);
@@ -70,7 +68,7 @@ export default function ImportScreen({ onImportSuccess, onViewInventory, onOpenC
       const items: InventoryItem[] = [];
       for (const row of rows) {
         const existingItem = await getItem(row.itemNumber);
-        const item = csvRowToInventoryItem(row, selectedCategory, existingItem || undefined);
+        const item = csvRowToInventoryItem(row, undefined, existingItem || undefined);
         if (item) items.push(item);
       }
 
@@ -112,7 +110,7 @@ export default function ImportScreen({ onImportSuccess, onViewInventory, onOpenC
       const items: InventoryItem[] = [];
       for (const row of rows) {
         const existingItem = await getItem(row.itemNumber || row['Item #'] || '');
-        const item = csvRowToInventoryItem(row, selectedCategory, existingItem || undefined);
+        const item = csvRowToInventoryItem(row, undefined, existingItem || undefined);
         if (item) items.push(item);
       }
 
@@ -137,13 +135,13 @@ export default function ImportScreen({ onImportSuccess, onViewInventory, onOpenC
 
   const handleExport = async () => {
     try {
-      const items = await getItemsByCategory(selectedCategory);
+      const items = await getAllItems();
       const json = JSON.stringify(items, null, 2);
       const blob = new Blob([json], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `lbk-${selectedCategory}-${Date.now()}.json`;
+      a.download = `bid-buddy-${Date.now()}.json`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (error) {
@@ -161,11 +159,10 @@ export default function ImportScreen({ onImportSuccess, onViewInventory, onOpenC
       const text = await file.text();
       const items: InventoryItem[] = JSON.parse(text);
 
-      const categoryItems = items.filter(item => item.category === selectedCategory);
-      await saveItems(categoryItems);
+      await saveItems(items);
 
       const timestamp = new Date().toLocaleString();
-      onImportSuccess(categoryItems, categoryItems.length, timestamp);
+      onImportSuccess(items, items.length, timestamp);
     } catch (error) {
       console.error('Import JSON error:', error);
       alert('Error importing JSON. Please check the file format.');
@@ -175,10 +172,10 @@ export default function ImportScreen({ onImportSuccess, onViewInventory, onOpenC
   };
 
   const handleClearCategory = async () => {
-    if (confirm(`Remove all ${selectedCategory} items? This cannot be undone.`)) {
+    if (confirm('Remove all items? This cannot be undone.')) {
       try {
-        await deleteItemsByCategory(selectedCategory);
-        alert('Category cleared.');
+        await deleteAllItems();
+        alert('All items cleared.');
       } catch (error) {
         console.error('Clear error:', error);
         alert('Error clearing category.');

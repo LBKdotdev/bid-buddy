@@ -1,9 +1,9 @@
 import { useState, useRef } from 'react';
 import { RefreshCw, Calculator, Search, Upload, Download, FileUp, Trash2, ChevronRight, List, FileText, Settings } from 'lucide-react';
-import type { Category, InventoryItem } from '../types/inventory';
-import { parseCSV, csvRowToInventoryItem } from '../utils/csv';
+import type { InventoryItem } from '../types/inventory';
+import { parseCSV, csvRowToInventoryItem, detectCategory } from '../utils/csv';
 import { parsePDF, parseCatalogPDF } from '../utils/pdfParser';
-import { saveItems, getItemsByCategory, getItem, deleteItemsByCategory } from '../utils/db';
+import { saveItems, getAllItems, getItem, deleteAllItems } from '../utils/db';
 import { getSettings } from '../utils/settings';
 
 interface HomeScreenProps {
@@ -35,8 +35,6 @@ export default function HomeScreen({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const jsonInputRef = useRef<HTMLInputElement>(null);
   const catalogInputRef = useRef<HTMLInputElement>(null);
-  const selectedCategory: Category = 'motorcycles';
-
   const handleSync = async () => {
     setSyncing(true);
     try {
@@ -88,7 +86,7 @@ export default function HomeScreen({
       const items: InventoryItem[] = [];
       for (const row of rows) {
         const existingItem = await getItem(row.itemNumber);
-        const item = csvRowToInventoryItem(row, selectedCategory, existingItem || undefined);
+        const item = csvRowToInventoryItem(row, undefined, existingItem || undefined);
         if (item) items.push(item);
       }
 
@@ -127,7 +125,7 @@ export default function HomeScreen({
       const items: InventoryItem[] = [];
       for (const row of rows) {
         const existingItem = await getItem(row.itemNumber || row['Item #'] || '');
-        const item = csvRowToInventoryItem(row, selectedCategory, existingItem || undefined);
+        const item = csvRowToInventoryItem(row, undefined, existingItem || undefined);
         if (item) items.push(item);
       }
 
@@ -151,7 +149,7 @@ export default function HomeScreen({
 
   const handleExport = async () => {
     try {
-      const items = await getItemsByCategory(selectedCategory);
+      const items = await getAllItems();
       const json = JSON.stringify(items, null, 2);
       const blob = new Blob([json], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
@@ -173,10 +171,9 @@ export default function HomeScreen({
     try {
       const text = await file.text();
       const items: InventoryItem[] = JSON.parse(text);
-      const categoryItems = items.filter(item => item.category === selectedCategory);
-      await saveItems(categoryItems);
+      await saveItems(items);
       const timestamp = new Date().toLocaleString();
-      onImportSuccess(categoryItems, categoryItems.length, timestamp);
+      onImportSuccess(items, items.length, timestamp);
     } catch (error) {
       alert('Import failed. Check file format.');
     } finally {
@@ -188,7 +185,7 @@ export default function HomeScreen({
   const handleClearAll = async () => {
     if (confirm('Remove all items? This cannot be undone.')) {
       try {
-        await deleteItemsByCategory(selectedCategory);
+        await deleteAllItems();
         onImportSuccess([], 0, '');
       } catch (error) {
         alert('Clear failed');
@@ -228,7 +225,7 @@ export default function HomeScreen({
         const item: InventoryItem = {
           id: existingItem?.id || parsed.id || `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           itemNumber: parsed.itemNumber,
-          category: catalogType as Category,
+          category: detectCategory(parsed.make || '', parsed.model || ''),
           title: parsed.title || '',
           year: parsed.year || null,
           make: parsed.make || '',

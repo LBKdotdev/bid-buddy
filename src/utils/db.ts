@@ -121,6 +121,18 @@ export async function deleteItem(id: string): Promise<void> {
   });
 }
 
+export async function deleteAllItems(): Promise<void> {
+  const database = await initDB();
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction([STORE_NAME], 'readwrite');
+    const store = transaction.objectStore(STORE_NAME);
+    const request = store.clear();
+
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error);
+  });
+}
+
 export async function deleteItemsByCategory(category: Category): Promise<void> {
   const items = await getItemsByCategory(category);
   const database = await initDB();

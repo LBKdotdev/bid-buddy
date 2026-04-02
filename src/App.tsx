@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import ErrorBoundary from './components/ErrorBoundary';
 import BottomNav from './components/BottomNav';
 import HomeScreen from './screens/HomeScreen';
 import ShortlistScreen from './screens/ShortlistScreen';
@@ -147,7 +148,7 @@ function App() {
   }
 
   return (
-    <>
+    <ErrorBoundary>
       <div className="min-h-screen bg-surface-900">
         {currentTab === 'home' && (
           <HomeScreen
@@ -172,7 +173,7 @@ function App() {
       {selectedItemId && (
         <ItemDetailScreen itemId={selectedItemId} onClose={handleCloseDetail} />
       )}
-    </>
+    </ErrorBoundary>
   );
 }
 

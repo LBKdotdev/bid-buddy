@@ -68,9 +68,79 @@ function generateId(row: CSVRow): string {
   return generateHash(hashInput);
 }
 
+export function detectCategory(make: string, model: string): Category {
+  const m = make.toUpperCase();
+  const mod = model.toUpperCase();
+  const combined = `${m} ${mod}`;
+
+  // --- Golf carts (check first — short list, unambiguous) ---
+  if (m.includes('CLUB CAR') || m.includes('EZGO') || m.includes('E-Z-GO') ||
+      m.includes('TOMBERLIN') || m.includes('ICON EV') ||
+      combined.includes('GOLF CART') || combined.includes('GOLF CAR')) {
+    return 'golf';
+  }
+  // Yamaha golf carts (Drive, G29, etc.)
+  if (m.includes('YAMAHA') && (mod.includes('DRIVE') || mod.includes('G29') ||
+      mod.includes('G22') || mod.includes('GOLF'))) {
+    return 'golf';
+  }
+
+  // --- RV / Marine / PWC ---
+  if (m.includes('SEA-DOO') || m.includes('SEA DOO') || m.includes('SEADOO')) return 'rv_marine';
+  if (combined.includes('WAVERUNNER') || combined.includes('WAVE RUNNER')) return 'rv_marine';
+  if (combined.includes('JET SKI') || combined.includes('JETSKI')) return 'rv_marine';
+  if (combined.includes('BOAT') || combined.includes('PONTOON') || combined.includes('TRAILER') ||
+      combined.includes('PWC') || combined.includes('PERSONAL WATERCRAFT')) return 'rv_marine';
+  // Kawasaki Jet Ski models
+  if (m.includes('KAWASAKI') && (mod.includes('ULTRA') || mod.includes('STX') ||
+      mod.includes('SX-R') || mod.includes('SXR'))) return 'rv_marine';
+
+  // --- ATV / SxS (check before motorcycles — some brands overlap) ---
+  // Can-Am ATV/SxS models
+  if ((m.includes('CAN-AM') || m.includes('CAN AM') || m.includes('CANAM')) &&
+      (mod.includes('MAVERICK') || mod.includes('OUTLANDER') || mod.includes('COMMANDER') ||
+       mod.includes('DEFENDER') || mod.includes('DS ') || mod.includes('RENEGADE'))) {
+    return 'atv_sxs';
+  }
+  // Polaris ATV/SxS (everything except Slingshot)
+  if (m.includes('POLARIS') && !mod.includes('SLINGSHOT')) {
+    return 'atv_sxs';
+  }
+  // Honda ATV/SxS models
+  if (m.includes('HONDA') && (mod.includes('TRX') || mod.includes('TALON') ||
+      mod.includes('PIONEER') || mod.includes('FOREMAN') || mod.includes('RANCHER') ||
+      mod.includes('FOURTRAX') || mod.includes('RINCON') || mod.includes('RECON'))) {
+    return 'atv_sxs';
+  }
+  // Yamaha ATV/SxS models
+  if (m.includes('YAMAHA') && (mod.includes('YFZ') || mod.includes('RAPTOR') ||
+      mod.includes('WOLVERINE') || mod.includes('VIKING') || mod.includes('GRIZZLY') ||
+      mod.includes('KODIAK') || mod.includes('YXZ') || mod.includes('RMAX'))) {
+    return 'atv_sxs';
+  }
+  // Kawasaki ATV/SxS models
+  if (m.includes('KAWASAKI') && (mod.includes('TERYX') || mod.includes('BRUTE FORCE') ||
+      mod.includes('KFX') || mod.includes('MULE') || mod.includes('BAYOU'))) {
+    return 'atv_sxs';
+  }
+  // Dedicated ATV/SxS brands
+  if (m.includes('ARCTIC CAT') || m.includes('TEXTRON') || m.includes('CF MOTO') ||
+      m.includes('CFMOTO') || m.includes('HISUN') || m.includes('KYMCO')) {
+    return 'atv_sxs';
+  }
+  // Generic ATV/SxS/UTV keywords
+  if (combined.includes('ATV') || combined.includes('UTV') || combined.includes('SIDE BY SIDE') ||
+      combined.includes('SIDE-BY-SIDE') || combined.includes('SXS')) {
+    return 'atv_sxs';
+  }
+
+  // --- Everything else defaults to motorcycles ---
+  return 'motorcycles';
+}
+
 export function csvRowToInventoryItem(
   row: CSVRow,
-  category: Category,
+  _category?: Category,
   existingItem?: InventoryItem
 ): InventoryItem | null {
   const location = row.location || row.Location || 'San Diego';
@@ -84,6 +154,9 @@ export function csvRowToInventoryItem(
 
   const make = row.make || row.Make || row.Brand || row.brand || '';
   const model = row.model || row.Model || row.Description || row.Desc || '';
+
+  // Auto-detect category from make/model
+  const category = detectCategory(make, model);
 
   // Build title from components, even if some are missing
   const titleParts = [year, make, model].filter(Boolean);

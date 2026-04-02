@@ -223,29 +223,6 @@ export default function SettingsScreen({ onBack }: SettingsScreenProps) {
             <h2 className="text-sm font-semibold text-zinc-300 uppercase tracking-wider">Data</h2>
           </div>
           <div className="card divide-y divide-surface-500/30">
-            <div className="p-4">
-              <label className="text-sm text-zinc-300 font-medium">Default Category</label>
-              <div className="grid grid-cols-2 gap-2 mt-3">
-                {([
-                  { id: 'motorcycles', label: 'Motorcycles' },
-                  { id: 'atv_sxs', label: 'ATV / SxS' },
-                  { id: 'rv_marine', label: 'RV / Marine' },
-                  { id: 'golf', label: 'Golf' },
-                ] as const).map((cat) => (
-                  <button
-                    key={cat.id}
-                    onClick={() => update({ defaultCategory: cat.id })}
-                    className={`py-2 rounded-xl text-sm font-medium border transition-all ${
-                      settings.defaultCategory === cat.id
-                        ? 'bg-status-info/10 border-status-info/40 text-status-info'
-                        : 'bg-surface-700 border-surface-500/30 text-zinc-400'
-                    }`}
-                  >
-                    {cat.label}
-                  </button>
-                ))}
-              </div>
-            </div>
             <button
               onClick={handleClearCache}
               className="w-full flex items-center justify-between p-4 active:bg-surface-600 transition-colors"

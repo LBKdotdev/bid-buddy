@@ -1,8 +1,9 @@
 import { useState, useRef } from 'react';
 import { Camera, Loader2, Plus, Search } from 'lucide-react';
-import type { InventoryItem, Category } from '../types/inventory';
+import type { InventoryItem } from '../types/inventory';
 import { getAllItems, saveItem } from '../utils/db';
 import { getBuyFee, getTotalDue } from '../utils/buyFee';
+import { detectCategory } from '../utils/csv';
 
 interface ScanScreenProps {
   onSelectItem: (itemId: string) => void;
@@ -142,7 +143,7 @@ Return ONLY valid JSON, nothing else. Example: {"itemNumber":"8026","year":2024,
       const newItem: InventoryItem = {
         id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         itemNumber: parsedTag.itemNumber,
-        category: 'motorcycles' as Category,
+        category: detectCategory(parsedTag.make || '', parsedTag.model || ''),
         title: `${parsedTag.year || ''} ${parsedTag.make || ''} ${parsedTag.model || ''}`.trim(),
         year: parsedTag.year || null,
         make: parsedTag.make || '',

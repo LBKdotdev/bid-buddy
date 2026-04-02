@@ -18,7 +18,6 @@ export interface AppSettings {
   };
 
   // Display
-  defaultCategory: 'motorcycles' | 'atv_sxs' | 'rv_marine' | 'golf';
   maxBidPercent: number; // percent of AI mid estimate for suggested max bid
 
   // Data
@@ -39,7 +38,6 @@ const DEFAULT_SETTINGS: AppSettings = {
     craigslist: true,
   },
 
-  defaultCategory: 'motorcycles',
   maxBidPercent: 75,
 
   lastCacheClear: '',
