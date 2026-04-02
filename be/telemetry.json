@@ -36,6 +36,32 @@
     "duration_sec": 60,
     "tokens": null,
     "cost_usd": null,
+    "commit": "f4f30c0"
+  },
+  {
+    "triple": "{Board 1, built in, bid-buddy}",
+    "command": "~b",
+    "description": "Board 1 complete — auto-detect category, remove dead code, error boundary",
+    "project": "bid-buddy",
+    "repo": "LBKdotdev/bid-buddy",
+    "date": "2026-04-02",
+    "time": "11:00",
+    "duration_sec": 300,
+    "tokens": null,
+    "cost_usd": null,
+    "commit": "9585a49"
+  },
+  {
+    "triple": "{auction-ready tests, tested in, bid-buddy}",
+    "command": "~t",
+    "description": "Test — 7 checks, all pass, 25/25 category detection",
+    "project": "bid-buddy",
+    "repo": "LBKdotdev/bid-buddy",
+    "date": "2026-04-02",
+    "time": "11:15",
+    "duration_sec": 120,
+    "tokens": null,
+    "cost_usd": null,
     "commit": null
   }
 ]

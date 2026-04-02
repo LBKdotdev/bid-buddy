@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>~t Test — Auction-Ready Bid Buddy</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #111111; color: #e0e0e0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 1.6; }
+  nav { position: sticky; top: 0; background: #000; border-bottom: 2px solid #6FC3DF; padding: 12px 24px; z-index: 100; display: flex; align-items: center; gap: 16px; }
+  nav .brand { color: #6FC3DF; font-weight: 700; font-size: 18px; }
+  nav .title { color: #999; font-size: 14px; }
+  .container { max-width: 800px; margin: 0 auto; padding: 24px 16px; }
+  h1 { color: #6FC3DF; font-size: 28px; margin-bottom: 4px; }
+  h2 { color: #6FC3DF; font-size: 20px; margin: 32px 0 12px; border-bottom: 1px solid #333; padding-bottom: 8px; }
+  .card { background: #1A1A1A; border-radius: 8px; padding: 20px; margin: 12px 0; }
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .stat { background: #1A1A1A; border-radius: 8px; padding: 16px; text-align: center; }
+  .stat .value { font-size: 28px; font-weight: 700; }
+  .stat .label { font-size: 12px; color: #888; margin-top: 4px; }
+  .pass { color: #4ade80; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+  th { text-align: left; color: #6FC3DF; font-size: 13px; padding: 8px 12px; border-bottom: 1px solid #333; }
+  td { padding: 8px 12px; border-bottom: 1px solid #222; font-size: 14px; }
+  .tag { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+  .tag-green { background: #16a34a22; color: #4ade80; border: 1px solid #16a34a44; }
+  .tag-red { background: #dc262622; color: #f87171; border: 1px solid #dc262644; }
+  .tag-yellow { background: #ca8a0422; color: #fbbf24; border: 1px solid #ca8a0444; }
+  code { background: #222; padding: 2px 6px; border-radius: 4px; font-size: 13px; color: #6FC3DF; }
+  footer { text-align: center; color: #555; font-size: 12px; margin-top: 48px; padding: 24px; border-top: 1px solid #222; }
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="brand">Be</span>
+  <span class="title">~t Test — Auction-Ready Bid Buddy</span>
+</nav>
+
+<div class="container">
+
+<h1>Test Report — Auction-Ready</h1>
+<p style="color:#888;">7 checks, all pass</p>
+
+<div class="stat-grid">
+  <div class="stat"><div class="value pass">7</div><div class="label">Passed</div></div>
+  <div class="stat"><div class="value" style="color:#f87171;">0</div><div class="label">Failed</div></div>
+  <div class="stat"><div class="value" style="color:#fbbf24;">0</div><div class="label">Fixes Applied</div></div>
+</div>
+
+<h2>What Was Tested</h2>
+<div class="card">
+  <table>
+    <tr><th>#</th><th>Test</th><th>Result</th></tr>
+    <tr>
+      <td>1</td>
+      <td><strong>Production build</strong> &mdash; <code>vite build</code> completes with zero errors</td>
+      <td><span class="tag tag-green">PASS</span></td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td><strong>TypeScript</strong> &mdash; no new type errors from our changes (5 pre-existing in unrelated files)</td>
+      <td><span class="tag tag-green">PASS</span></td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td><strong>Category detection</strong> &mdash; 25 make/model combos across all 4 categories, 25/25 correct</td>
+      <td><span class="tag tag-green">PASS</span></td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td><strong>No broken imports</strong> &mdash; zero references to deleted files (ItemDetailsScreen, InventoryScreen, AuctionDataScreen, KittyCompsScreen, ItemRow, auction.ts)</td>
+      <td><span class="tag tag-green">PASS</span></td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td><strong>No stale category refs</strong> &mdash; zero references to <code>defaultCategory</code> or <code>selectedCategory</code> anywhere in src/</td>
+      <td><span class="tag tag-green">PASS</span></td>
+    </tr>
+    <tr>
+      <td>6</td>
+      <td><strong>detectCategory wired</strong> &mdash; used in csv.ts (import), HomeScreen (catalog), ScanScreen (OCR add)</td>
+      <td><span class="tag tag-green">PASS</span></td>
+    </tr>
+    <tr>
+      <td>7</td>
+      <td><strong>ErrorBoundary wired</strong> &mdash; imported and wrapping main App content in App.tsx</td>
+      <td><span class="tag tag-green">PASS</span></td>
+    </tr>
+  </table>
+</div>
+
+<h2>Category Detection Test Cases</h2>
+<div class="card">
+  <table>
+    <tr><th>Make</th><th>Model</th><th>Expected</th><th>Result</th></tr>
+    <tr><td>Harley-Davidson</td><td>Street Glide</td><td>motorcycles</td><td><span class="tag tag-green">PASS</span></td></tr>
+    <tr><td>Can-Am</td><td>Ryker 900</td><td>motorcycles</td><td><span class="tag tag-green">PASS</span></td></tr>
+    <tr><td>Polaris</td><td>Slingshot</td><td>motorcycles</td><td><span class="tag tag-green">PASS</span></td></tr>
+    <tr><td>Polaris</td><td>RZR XP 1000</td><td>atv_sxs</td><td><span class="tag tag-green">PASS</span></td></tr>
+    <tr><td>Can-Am</td><td>Maverick X3</td><td>atv_sxs</td><td><span class="tag tag-green">PASS</span></td></tr>
+    <tr><td>Honda</td><td>TRX450R</td><td>atv_sxs</td><td><span class="tag tag-green">PASS</span></td></tr>
+    <tr><td>Yamaha</td><td>Raptor 700</td><td>atv_sxs</td><td><span class="tag tag-green">PASS</span></td></tr>
+    <tr><td>Arctic Cat</td><td>Wildcat XX</td><td>atv_sxs</td><td><span class="tag tag-green">PASS</span></td></tr>
+    <tr><td>Sea-Doo</td><td>GTX 300</td><td>rv_marine</td><td><span class="tag tag-green">PASS</span></td></tr>
+    <tr><td>Kawasaki</td><td>Ultra 310X</td><td>rv_marine</td><td><span class="tag tag-green">PASS</span></td></tr>
+    <tr><td>Club Car</td><td>Precedent</td><td>golf</td><td><span class="tag tag-green">PASS</span></td></tr>
+    <tr><td>E-Z-GO</td><td>TXT</td><td>golf</td><td><span class="tag tag-green">PASS</span></td></tr>
+    <tr><td colspan="4" style="color:#888; text-align:center;">+ 13 more (all passing)</td></tr>
+  </table>
+</div>
+
+<h2>Pre-Existing Issues (not from our changes)</h2>
+<div class="card">
+  <table>
+    <tr><th>File</th><th>Issue</th><th>Severity</th></tr>
+    <tr><td><code>ShortlistScreen.tsx</code></td><td>2 type errors (boolean/string assignment)</td><td><span class="tag tag-yellow">Low</span></td></tr>
+    <tr><td><code>comps.ts</code></td><td>3 type errors (missing Comp/CompsSummary fields)</td><td><span class="tag tag-yellow">Low</span></td></tr>
+    <tr><td><code>pdfParser.ts</code></td><td>3 unused variable warnings</td><td><span class="tag tag-yellow">Low</span></td></tr>
+    <tr><td>Bundle size</td><td>868 KB (above 500 KB warning)</td><td><span class="tag tag-yellow">Low</span></td></tr>
+  </table>
+  <p style="margin-top:12px; color:#888;">None of these affect the auction demo. All pre-date our changes.</p>
+</div>
+
+<h2>Vercel Deploy</h2>
+<div class="card">
+  <table>
+    <tr><td>Status</td><td><span class="tag tag-green">Ready</span></td></tr>
+    <tr><td>Build time</td><td>11 seconds</td></tr>
+    <tr><td>Env vars</td><td>3/3 set (SUPABASE_URL, SUPABASE_ANON_KEY, GROQ_API_KEY)</td></tr>
+  </table>
+</div>
+
+</div>
+
+<footer>Generated 2026-04-02 11:15 &mdash; Be v2.1</footer>
+
+</body>
+</html>
