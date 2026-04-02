@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>~p Plan — Auction-Ready Bid Buddy</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #111111; color: #e0e0e0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 1.6; }
+  nav { position: sticky; top: 0; background: #000; border-bottom: 2px solid #6FC3DF; padding: 12px 24px; z-index: 100; display: flex; align-items: center; gap: 16px; }
+  nav .brand { color: #6FC3DF; font-weight: 700; font-size: 18px; }
+  nav .title { color: #999; font-size: 14px; }
+  .container { max-width: 800px; margin: 0 auto; padding: 24px 16px; }
+  h1 { color: #6FC3DF; font-size: 28px; margin-bottom: 4px; }
+  h2 { color: #6FC3DF; font-size: 20px; margin: 32px 0 12px; border-bottom: 1px solid #333; padding-bottom: 8px; }
+  h3 { color: #ccc; font-size: 16px; margin: 20px 0 8px; }
+  .card { background: #1A1A1A; border-radius: 8px; padding: 20px; margin: 12px 0; }
+  .banner { background: #ca8a0415; border: 1px solid #ca8a0444; border-radius: 8px; padding: 16px; margin: 16px 0; text-align: center; }
+  .banner strong { color: #fbbf24; font-size: 16px; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+  th { text-align: left; color: #6FC3DF; font-size: 13px; padding: 8px 12px; border-bottom: 1px solid #333; }
+  td { padding: 8px 12px; border-bottom: 1px solid #222; font-size: 14px; }
+  .tag { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; margin: 2px; }
+  .tag-red { background: #dc262622; color: #f87171; border: 1px solid #dc262644; }
+  .tag-yellow { background: #ca8a0422; color: #fbbf24; border: 1px solid #ca8a0444; }
+  .tag-green { background: #16a34a22; color: #4ade80; border: 1px solid #16a34a44; }
+  .tag-blue { background: #2563eb22; color: #60a5fa; border: 1px solid #2563eb44; }
+  ul { padding-left: 20px; margin: 8px 0; }
+  li { margin: 6px 0; font-size: 14px; }
+  code { background: #222; padding: 2px 6px; border-radius: 4px; font-size: 13px; color: #6FC3DF; }
+  .phase { border-left: 3px solid #6FC3DF; padding-left: 16px; margin: 16px 0; }
+  .phase-title { color: #6FC3DF; font-weight: 700; font-size: 16px; margin-bottom: 8px; }
+  .file-ref { color: #888; font-size: 12px; font-style: italic; }
+  footer { text-align: center; color: #555; font-size: 12px; margin-top: 48px; padding: 24px; border-top: 1px solid #222; }
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="brand">Be</span>
+  <span class="title">~p Plan — Auction-Ready Bid Buddy</span>
+</nav>
+
+<div class="container">
+
+<h1>Auction-Ready Bid Buddy</h1>
+<p style="color:#888;">Ship by EOD &mdash; NPA San Diego demo tomorrow</p>
+
+<div class="banner">
+  <strong>Plan &mdash; Awaiting Approval</strong>
+</div>
+
+<!-- INTENT -->
+<h2>Intent</h2>
+<div class="card">
+  <p><strong>What:</strong> Fix the category system, clean dead code, harden for live auction use, and ship to Vercel &mdash; all today.</p>
+  <p style="margin-top:8px;"><strong>Why:</strong> LBK demos Bid Buddy at NPA San Diego tomorrow. Mixed auction &mdash; motorcycles, ATVs, SxS, RV/Marine all on the same floor. The app must handle all categories without manual switching.</p>
+  <p style="margin-top:8px;"><strong>Constraint:</strong> EOD ship. No new features beyond what's needed for a clean demo. Fix what's broken, remove what's dead, test what matters.</p>
+</div>
+
+<!-- SCOPE -->
+<h2>Scope</h2>
+<div class="card">
+  <h3>In Scope</h3>
+  <ul>
+    <li>Auto-detect category from make/model at import time (CSV, API sync, PDF, scan)</li>
+    <li>Remove <code>defaultCategory</code> setting &mdash; it's now automatic</li>
+    <li>Delete 6 unused files (dead screens, dead components)</li>
+    <li>Add React error boundary so one screen crash doesn't kill the app</li>
+    <li>Verify full flow: import &rarr; floor lookup &rarr; comps &rarr; max bid</li>
+    <li>Ship to Vercel from new <code>LBKdotdev/bid-buddy</code> repo</li>
+  </ul>
+  <h3>Out of Scope</h3>
+  <ul>
+    <li>New features (filtering, new screens, PWA icons)</li>
+    <li>Supabase edge function changes</li>
+    <li>Comps engine changes</li>
+    <li>Performance optimization</li>
+  </ul>
+</div>
+
+<!-- APPROACH -->
+<h2>Approach</h2>
+
+<div class="phase">
+  <div class="phase-title">Phase 1: Auto-Detect Category</div>
+  <p>Add a <code>detectCategory(make, model)</code> function to <code>csv.ts</code>. Map known makes to categories:</p>
+  <div class="card">
+    <table>
+      <tr><th>Category</th><th>Makes / Keywords</th></tr>
+      <tr><td><code>motorcycles</code></td><td>Harley-Davidson, Honda (CBR/Shadow/Rebel/Gold Wing), Yamaha (YZF/MT/V-Star), Kawasaki (Ninja/Vulcan/Z), Suzuki (GSX/Boulevard), Indian, Triumph, BMW (R/S/F series), Ducati, Can-Am Spyder/Ryker, Polaris Slingshot</td></tr>
+      <tr><td><code>atv_sxs</code></td><td>Polaris (RZR/Sportsman/Ranger/General), Can-Am (Maverick/Outlander/Commander/DS), Honda (TRX/Talon/Pioneer), Yamaha (YFZ/Raptor/Wolverine/Viking), Kawasaki (Teryx/Brute Force/KFX), Arctic Cat/Textron, CF Moto</td></tr>
+      <tr><td><code>rv_marine</code></td><td>Sea-Doo, Yamaha WaveRunner, Kawasaki Jet Ski, any boat/PWC/RV/trailer keywords</td></tr>
+      <tr><td><code>golf</code></td><td>Club Car, E-Z-GO, EZGO, Yamaha (Drive/G29), ICON, Tomberlin</td></tr>
+    </table>
+    <p style="margin-top:12px; color:#888;">Fallback: <code>motorcycles</code> (most common at NPA SD)</p>
+  </div>
+  <p class="file-ref">Files: <code>src/utils/csv.ts</code> (add detectCategory, call in csvRowToInventoryItem)</p>
+  <p class="file-ref">Also update: <code>HomeScreen.tsx:38</code>, <code>HomeScreen.tsx:91,130</code>, <code>ImportScreen.tsx:22,73,115</code>, <code>ScanScreen.tsx:145</code></p>
+</div>
+
+<div class="phase">
+  <div class="phase-title">Phase 2: Remove Default Category Setting</div>
+  <p>With auto-detect, the <code>defaultCategory</code> setting is no longer needed. Remove it from:</p>
+  <ul>
+    <li><code>settings.ts</code> &mdash; remove from type and defaults</li>
+    <li><code>SettingsScreen.tsx</code> &mdash; remove the category selector UI</li>
+  </ul>
+  <p style="color:#888; margin-top:8px;">The "DATA" section in Settings becomes just "Clear Comps Cache" and "Reset All Settings".</p>
+</div>
+
+<div class="phase">
+  <div class="phase-title">Phase 3: Delete Dead Code</div>
+  <table>
+    <tr><th>File</th><th>Reason</th></tr>
+    <tr><td><code>src/screens/ItemDetailsScreen.tsx</code></td><td>Duplicate of ItemDetailScreen, not in App.tsx</td></tr>
+    <tr><td><code>src/screens/InventoryScreen.tsx</code></td><td>Only consumer of ItemDetailsScreen, not in nav</td></tr>
+    <tr><td><code>src/screens/AuctionDataScreen.tsx</code></td><td>Not imported anywhere</td></tr>
+    <tr><td><code>src/screens/KittyCompsScreen.tsx</code></td><td>Legacy comps, replaced by multiSourceComps</td></tr>
+    <tr><td><code>src/components/ItemRow.tsx</code></td><td>Not imported anywhere</td></tr>
+    <tr><td><code>src/types/auction.ts</code></td><td>Not imported anywhere</td></tr>
+  </table>
+</div>
+
+<div class="phase">
+  <div class="phase-title">Phase 4: Error Boundary</div>
+  <p>Add a React error boundary component that catches render crashes and shows a "Something went wrong &mdash; tap to retry" screen instead of a white screen of death. Wrap the tab content in App.tsx.</p>
+  <p class="file-ref">Files: <code>src/components/ErrorBoundary.tsx</code> (new), <code>src/App.tsx</code> (wrap)</p>
+</div>
+
+<div class="phase">
+  <div class="phase-title">Phase 5: Test &amp; Ship</div>
+  <ul>
+    <li>Run <code>npm run build</code> &mdash; verify zero errors</li>
+    <li>Run <code>npm run dev</code> &mdash; test import, floor, comps, detail, scan</li>
+    <li>Push to main &mdash; Vercel auto-deploys</li>
+    <li>Verify production URL loads and env vars work</li>
+  </ul>
+</div>
+
+<!-- CONSTRAINTS -->
+<h2>Constraints</h2>
+<div class="card">
+  <ul>
+    <li><strong>Time:</strong> EOD today (2026-04-02)</li>
+    <li><strong>Risk tolerance:</strong> Low &mdash; this is a live demo tomorrow. Only change what's necessary.</li>
+    <li><strong>No Supabase changes:</strong> Edge functions stay as-is. Category detection is client-side only.</li>
+    <li><strong>Comps are category-agnostic:</strong> <code>multiSourceComps.ts</code> searches by make/model text, not category. No changes needed there.</li>
+    <li><strong>Floor/Shortlist already cross-category:</strong> Both use <code>getAllItems()</code>. No changes needed.</li>
+    <li><strong>AI estimates are make/model based:</strong> <code>aiEstimate.ts</code> heuristics already cover motorcycles, ATVs, and marine. No changes needed.</li>
+  </ul>
+</div>
+
+<!-- WHAT DOESN'T CHANGE -->
+<h2>What Doesn't Change</h2>
+<div class="card">
+  <table>
+    <tr><td><span class="tag tag-green">SAFE</span></td><td><code>FloorScreen.tsx</code> &mdash; already uses getAllItems()</td></tr>
+    <tr><td><span class="tag tag-green">SAFE</span></td><td><code>ShortlistScreen.tsx</code> &mdash; already uses getAllItems()</td></tr>
+    <tr><td><span class="tag tag-green">SAFE</span></td><td><code>ItemDetailScreen.tsx</code> &mdash; comps/estimates by make+model</td></tr>
+    <tr><td><span class="tag tag-green">SAFE</span></td><td><code>multiSourceComps.ts</code> &mdash; searches by text query</td></tr>
+    <tr><td><span class="tag tag-green">SAFE</span></td><td><code>aiEstimate.ts</code> &mdash; heuristics cover all categories</td></tr>
+    <tr><td><span class="tag tag-green">SAFE</span></td><td><code>buyFee.ts</code> &mdash; fee table is category-independent</td></tr>
+    <tr><td><span class="tag tag-green">SAFE</span></td><td><code>db.ts</code> &mdash; IndexedDB schema unchanged</td></tr>
+  </table>
+</div>
+
+</div>
+
+<footer>Generated 2026-04-02 10:45 &mdash; Be v2.1</footer>
+
+</body>
+</html>
