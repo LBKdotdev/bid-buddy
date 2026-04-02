@@ -1,0 +1,15 @@
+[
+  {
+    "triple": "{Bid Buddy, inspected in, bid-buddy}",
+    "command": "~i",
+    "description": "Inspect bid-buddy — full codebase audit, demo blockers identified",
+    "project": "bid-buddy",
+    "repo": "LBKdotdev/bid-buddy",
+    "date": "2026-04-02",
+    "time": "10:30",
+    "duration_sec": 120,
+    "tokens": null,
+    "cost_usd": null,
+    "commit": null
+  }
+]

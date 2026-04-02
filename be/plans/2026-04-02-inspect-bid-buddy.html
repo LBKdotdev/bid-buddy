@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>~i Inspect — Bid Buddy</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #111111; color: #e0e0e0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 1.6; }
+  nav { position: sticky; top: 0; background: #000; border-bottom: 2px solid #6FC3DF; padding: 12px 24px; z-index: 100; display: flex; align-items: center; gap: 16px; }
+  nav .brand { color: #6FC3DF; font-weight: 700; font-size: 18px; }
+  nav .title { color: #999; font-size: 14px; }
+  .container { max-width: 800px; margin: 0 auto; padding: 24px 16px; }
+  h1 { color: #6FC3DF; font-size: 28px; margin-bottom: 8px; }
+  h2 { color: #6FC3DF; font-size: 20px; margin: 32px 0 12px; border-bottom: 1px solid #333; padding-bottom: 8px; }
+  h3 { color: #ccc; font-size: 16px; margin: 20px 0 8px; }
+  .card { background: #1A1A1A; border-radius: 8px; padding: 20px; margin: 12px 0; }
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .stat { background: #1A1A1A; border-radius: 8px; padding: 16px; text-align: center; }
+  .stat .value { font-size: 28px; font-weight: 700; color: #6FC3DF; }
+  .stat .label { font-size: 12px; color: #888; margin-top: 4px; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+  th { text-align: left; color: #6FC3DF; font-size: 13px; padding: 8px 12px; border-bottom: 1px solid #333; }
+  td { padding: 8px 12px; border-bottom: 1px solid #222; font-size: 14px; }
+  .tag { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; margin: 2px; }
+  .tag-green { background: #16a34a22; color: #4ade80; border: 1px solid #16a34a44; }
+  .tag-red { background: #dc262622; color: #f87171; border: 1px solid #dc262644; }
+  .tag-yellow { background: #ca8a0422; color: #fbbf24; border: 1px solid #ca8a0444; }
+  .tag-blue { background: #2563eb22; color: #60a5fa; border: 1px solid #2563eb44; }
+  .tag-gray { background: #33333366; color: #999; border: 1px solid #44444466; }
+  ul { padding-left: 20px; margin: 8px 0; }
+  li { margin: 4px 0; font-size: 14px; }
+  code { background: #222; padding: 2px 6px; border-radius: 4px; font-size: 13px; color: #6FC3DF; }
+  .banner { background: #6FC3DF15; border: 1px solid #6FC3DF44; border-radius: 8px; padding: 16px; margin: 16px 0; }
+  .banner-warn { background: #ca8a0415; border-color: #ca8a0444; }
+  .banner-danger { background: #dc262615; border-color: #dc262644; }
+  .file-tree { font-family: monospace; font-size: 13px; background: #1A1A1A; border-radius: 8px; padding: 16px; overflow-x: auto; white-space: pre; line-height: 1.5; }
+  footer { text-align: center; color: #555; font-size: 12px; margin-top: 48px; padding: 24px; border-top: 1px solid #222; }
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="brand">Be</span>
+  <span class="title">~i Inspect — Bid Buddy</span>
+</nav>
+
+<div class="container">
+
+<h1>Bid Buddy — Inspection Report</h1>
+<p style="color:#888; margin-bottom: 24px;">NPA San Diego auction triage PWA &mdash; auction demo tomorrow</p>
+
+<!-- STATS -->
+<div class="stat-grid">
+  <div class="stat"><div class="value">~8,400</div><div class="label">Lines of Code (TS/TSX)</div></div>
+  <div class="stat"><div class="value">5</div><div class="label">Commits</div></div>
+  <div class="stat"><div class="value">14</div><div class="label">Screens &amp; Components</div></div>
+  <div class="stat"><div class="value">0%</div><div class="label">Test Coverage</div></div>
+</div>
+
+<!-- INTENT -->
+<h2>Intent</h2>
+<div class="card">
+  <p><strong>Purpose:</strong> Give LBK a competitive edge at NPA San Diego power sports auctions &mdash; fast item lookup, real-time comps, AI estimates, and max bid suggestions all in one mobile PWA.</p>
+  <p style="margin-top:8px;"><strong>Stack:</strong> React 18 + TypeScript, Vite, Tailwind CSS 3, Supabase edge functions, Groq (LLaMA Scout), Apify (CL/FB comps), IndexedDB offline storage.</p>
+  <p style="margin-top:8px;"><strong>Deploy:</strong> Vercel &rarr; <code>LBKdotdev/bid-buddy</code> (just connected)</p>
+</div>
+
+<!-- STRUCTURE -->
+<h2>Structure</h2>
+<div class="file-tree">src/
+  App.tsx                 State-based router (4 tabs + modals)
+  screens/
+    HomeScreen.tsx        Import/sync hub, stats dashboard
+    FloorScreen.tsx       Live auction lookup (item# / buddy tag)
+    ShortlistScreen.tsx   Card swipe, batch comps, status actions
+    ScanScreen.tsx        Camera OCR via Groq Vision
+    ItemDetailScreen.tsx  Full research hub (1,038 lines)
+    CompsScreen.tsx       Standalone comps lookup
+    BuyFeeCalcScreen.tsx  NPA fee calculator
+    ImportScreen.tsx      CSV/PDF/JSON import
+    SettingsScreen.tsx    App config + cache controls
+    AllListingsScreen.tsx Browse/filter all inventory
+  services/
+    multiSourceComps.ts   eBay + Craigslist + FB via Supabase proxy
+    aiEstimate.ts         Groq AI + 50-model heuristic fallback
+    knownIssues.ts        NHTSA recalls + Groq common problems
+    groqRateLimit.ts      Shared rate-limit tracker
+  utils/
+    db.ts                 IndexedDB wrapper
+    csv.ts                CSV parser (San Diego filter)
+    pdfParser.ts          PDF catalog extraction
+    buyFee.ts             NPA fee table ($105-$5,550)
+    buddyTag.ts           5-char tag generator
+    settings.ts           localStorage settings
+supabase/functions/
+    fetch-comps/          Multi-source comps aggregator
+    fetch-npa-inventory/  NPA API proxy (GCP Cloud Run)
+    scan-tag/             OCR via Groq</div>
+
+<!-- WHAT WORKS -->
+<h2>What Works</h2>
+<div class="card">
+  <table>
+    <tr><td><span class="tag tag-green">OK</span></td><td>CSV import with status/notes preservation</td></tr>
+    <tr><td><span class="tag tag-green">OK</span></td><td>Floor lookup by item # or buddy tag</td></tr>
+    <tr><td><span class="tag tag-green">OK</span></td><td>AI price estimates (Groq + heuristic fallback)</td></tr>
+    <tr><td><span class="tag tag-green">OK</span></td><td>Multi-source comps with 60-min cache</td></tr>
+    <tr><td><span class="tag tag-green">OK</span></td><td>NPA buy fee calculator + max bid suggestions</td></tr>
+    <tr><td><span class="tag tag-green">OK</span></td><td>Shortlist + swipeable status tracking</td></tr>
+    <tr><td><span class="tag tag-green">OK</span></td><td>NHTSA recall lookup + known issues</td></tr>
+    <tr><td><span class="tag tag-green">OK</span></td><td>Camera OCR tag scanning (Groq Vision)</td></tr>
+    <tr><td><span class="tag tag-green">OK</span></td><td>PWA install, offline inventory via IndexedDB</td></tr>
+    <tr><td><span class="tag tag-green">OK</span></td><td>Settings dashboard with cache controls</td></tr>
+  </table>
+</div>
+
+<!-- DEMO BLOCKERS -->
+<h2>Demo Blockers for Tomorrow</h2>
+
+<div class="banner banner-danger">
+  <h3>1. Category Hardcoded to Motorcycles</h3>
+  <p>All CSV/API imports stamp every item as <code>motorcycles</code> regardless of make/model. At a mixed auction (ATVs, SxS, RV/Marine, Golf), this means wrong labels and potentially wrong comps context. The <code>defaultCategory</code> setting exists in the UI but is never consulted during import.</p>
+  <p style="margin-top:8px;"><strong>Fix:</strong> Auto-detect category from make/model at import time. Can-Am Ryker = motorcycle. Polaris RZR = ATV/SxS. Sea-Doo = RV/Marine. EZ-GO = Golf. Default fallback for unknowns.</p>
+</div>
+
+<div class="banner banner-warn">
+  <h3>2. Dead Code &mdash; Unused Screens</h3>
+  <p>4 screens not wired into App.tsx navigation: <code>ItemDetailsScreen</code> (duplicate), <code>InventoryScreen</code>, <code>AuctionDataScreen</code>, <code>KittyCompsScreen</code>. Plus <code>ItemRow.tsx</code> component unused. Not a blocker but adds confusion.</p>
+</div>
+
+<div class="banner banner-warn">
+  <h3>3. Comps Source Toggles Duplicated</h3>
+  <p>Settings screen has global source toggles (eBay/CycleTrader/Craigslist). ItemDetailScreen has local overrides stored in localStorage. User can't tell which takes precedence.</p>
+</div>
+
+<div class="banner banner-warn">
+  <h3>4. No Error Boundaries</h3>
+  <p>A crash in any screen (OCR failure, comps timeout) takes down the entire app. One React error boundary around the tab content would prevent this.</p>
+</div>
+
+<!-- ENV VARS -->
+<h2>Environment Variables Required</h2>
+<div class="card">
+  <table>
+    <tr><th>Variable</th><th>Required</th><th>Purpose</th></tr>
+    <tr><td><code>VITE_SUPABASE_URL</code></td><td><span class="tag tag-red">Yes</span></td><td>Supabase project URL</td></tr>
+    <tr><td><code>VITE_SUPABASE_ANON_KEY</code></td><td><span class="tag tag-red">Yes</span></td><td>Supabase anonymous key</td></tr>
+    <tr><td><code>VITE_GROQ_API_KEY</code></td><td><span class="tag tag-red">Yes</span></td><td>Groq AI (estimates + OCR)</td></tr>
+    <tr><td><code>VITE_APIFY_API_TOKEN</code></td><td><span class="tag tag-yellow">Optional</span></td><td>FB Marketplace + Craigslist comps</td></tr>
+  </table>
+  <p style="margin-top:12px; color:#888;">These must be set in Vercel project settings AND in local <code>.env</code> for dev.</p>
+</div>
+
+<!-- COMPS COST -->
+<h2>Comps Cost Per Search</h2>
+<div class="card">
+  <table>
+    <tr><th>Source</th><th>Cost</th><th>Notes</th></tr>
+    <tr><td>eBay Sold</td><td>Free</td><td>HTML scrape, 120 results, always on</td></tr>
+    <tr><td>Craigslist</td><td>~$0.11</td><td>Apify actor, 3 SoCal cities</td></tr>
+    <tr><td>FB Marketplace</td><td>~$0.30</td><td>Apify actor, 150mi radius</td></tr>
+    <tr><td><strong>Total (all 3)</strong></td><td><strong>~$0.41</strong></td><td>Per search, 60-min cache</td></tr>
+  </table>
+</div>
+
+<!-- OPEN QUESTIONS -->
+<h2>Open Questions</h2>
+<div class="card">
+  <ul>
+    <li>Are the Supabase edge functions still deployed and working?</li>
+    <li>Is the GCP Cloud Run NPA API proxy still live?</li>
+    <li>Does Scotty have the real NPA auction catalog CSV for tomorrow?</li>
+    <li>Which categories will be at tomorrow's auction? (affects auto-detect priority)</li>
+    <li>Should we keep CycleTrader in the comps stack info or is it dead code?</li>
+    <li>PWA manifest has no icons &mdash; do we need a proper app icon for the demo?</li>
+  </ul>
+</div>
+
+<!-- RECOMMENDED PLAN -->
+<h2>Recommended Plan for Today</h2>
+<div class="card">
+  <table>
+    <tr><th>#</th><th>Item</th><th>Priority</th><th>Time</th></tr>
+    <tr><td>1</td><td>Auto-detect category from make/model on import</td><td><span class="tag tag-red">Must</span></td><td>~30 min</td></tr>
+    <tr><td>2</td><td>Delete dead screens + unused code</td><td><span class="tag tag-yellow">Should</span></td><td>~10 min</td></tr>
+    <tr><td>3</td><td>Add React error boundary</td><td><span class="tag tag-yellow">Should</span></td><td>~10 min</td></tr>
+    <tr><td>4</td><td>Verify env vars + Supabase + GCP</td><td><span class="tag tag-red">Must</span></td><td>~15 min</td></tr>
+    <tr><td>5</td><td>Test full flow: import &rarr; floor lookup &rarr; comps &rarr; bid</td><td><span class="tag tag-red">Must</span></td><td>~20 min</td></tr>
+    <tr><td>6</td><td>Ship to Vercel from new repo</td><td><span class="tag tag-red">Must</span></td><td>~5 min</td></tr>
+  </table>
+</div>
+
+</div>
+
+<footer>Generated 2026-04-02 10:30 &mdash; Be v2.1</footer>
+
+</body>
+</html>

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Be — Telemetry</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #111111; color: #e0e0e0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 1.6; }
+  nav { position: sticky; top: 0; background: #000; border-bottom: 2px solid #6FC3DF; padding: 12px 24px; z-index: 100; }
+  nav .brand { color: #6FC3DF; font-weight: 700; font-size: 18px; }
+  .container { max-width: 800px; margin: 0 auto; padding: 24px 16px; }
+  h1 { color: #6FC3DF; font-size: 24px; margin-bottom: 16px; }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; color: #6FC3DF; font-size: 12px; padding: 8px; border-bottom: 1px solid #333; }
+  td { padding: 8px; border-bottom: 1px solid #222; font-size: 13px; }
+  .cmd { color: #6FC3DF; font-weight: 600; }
+  footer { text-align: center; color: #555; font-size: 12px; margin-top: 48px; padding: 24px; border-top: 1px solid #222; }
+</style>
+</head>
+<body>
+<nav><span class="brand">Be</span></nav>
+<div class="container">
+<h1>Telemetry</h1>
+<table>
+<thead><tr><th>Date</th><th>Cmd</th><th>Description</th><th>Duration</th></tr></thead>
+<tbody id="rows"></tbody>
+</table>
+</div>
+<footer>Be v2.1</footer>
+<script>
+const data = [{"triple":"{Bid Buddy, inspected in, bid-buddy}","command":"~i","description":"Inspect bid-buddy — full codebase audit, demo blockers identified","project":"bid-buddy","repo":"LBKdotdev/bid-buddy","date":"2026-04-02","time":"10:30","duration_sec":120,"tokens":null,"cost_usd":null,"commit":null}];
+const tbody = document.getElementById('rows');
+data.forEach(e => {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td>${e.date} ${e.time}</td><td class="cmd">${e.command}</td><td>${e.description}</td><td>${e.duration_sec}s</td>`;
+  tbody.appendChild(tr);
+});
+</script>
+</body>
+</html>
