@@ -23,6 +23,19 @@
     "duration_sec": 90,
     "tokens": null,
     "cost_usd": null,
+    "commit": "cd25ba4"
+  },
+  {
+    "triple": "{auction-ready estimate, estimated for, bid-buddy}",
+    "command": "~e",
+    "description": "Estimate — 1 board, 5 items, 21 pts for NPA demo",
+    "project": "bid-buddy",
+    "repo": "LBKdotdev/bid-buddy",
+    "date": "2026-04-02",
+    "time": "10:50",
+    "duration_sec": 60,
+    "tokens": null,
+    "cost_usd": null,
     "commit": null
   }
 ]

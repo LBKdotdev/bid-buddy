@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>~e Estimate — Auction-Ready Bid Buddy</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #111111; color: #e0e0e0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 1.6; }
+  nav { position: sticky; top: 0; background: #000; border-bottom: 2px solid #6FC3DF; padding: 12px 24px; z-index: 100; display: flex; align-items: center; gap: 16px; }
+  nav .brand { color: #6FC3DF; font-weight: 700; font-size: 18px; }
+  nav .title { color: #999; font-size: 14px; }
+  .container { max-width: 800px; margin: 0 auto; padding: 24px 16px; }
+  h1 { color: #6FC3DF; font-size: 28px; margin-bottom: 4px; }
+  h2 { color: #6FC3DF; font-size: 20px; margin: 32px 0 12px; border-bottom: 1px solid #333; padding-bottom: 8px; }
+  .card { background: #1A1A1A; border-radius: 8px; padding: 20px; margin: 12px 0; }
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .stat { background: #1A1A1A; border-radius: 8px; padding: 16px; text-align: center; }
+  .stat .value { font-size: 28px; font-weight: 700; color: #6FC3DF; }
+  .stat .label { font-size: 12px; color: #888; margin-top: 4px; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+  th { text-align: left; color: #6FC3DF; font-size: 13px; padding: 8px 12px; border-bottom: 1px solid #333; }
+  td { padding: 8px 12px; border-bottom: 1px solid #222; font-size: 14px; }
+  .tag { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+  .tag-blue { background: #2563eb22; color: #60a5fa; border: 1px solid #2563eb44; }
+  .tag-green { background: #16a34a22; color: #4ade80; border: 1px solid #16a34a44; }
+  code { background: #222; padding: 2px 6px; border-radius: 4px; font-size: 13px; color: #6FC3DF; }
+  footer { text-align: center; color: #555; font-size: 12px; margin-top: 48px; padding: 24px; border-top: 1px solid #222; }
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="brand">Be</span>
+  <span class="title">~e Estimate — Auction-Ready Bid Buddy</span>
+</nav>
+
+<div class="container">
+
+<h1>Estimate — Auction-Ready Bid Buddy</h1>
+<p style="color:#888;">1 board, 5 items, 21 points</p>
+
+<div class="stat-grid">
+  <div class="stat"><div class="value">1</div><div class="label">Board</div></div>
+  <div class="stat"><div class="value">5</div><div class="label">Work Items</div></div>
+  <div class="stat"><div class="value">21</div><div class="label">Story Points</div></div>
+</div>
+
+<h2>Board 1 — Category Auto-Detect + Cleanup</h2>
+<div class="card">
+  <table>
+    <tr><th>#</th><th>Item</th><th>Cmd</th><th>Pts</th></tr>
+    <tr>
+      <td>1</td>
+      <td>{category auto-detect function, <strong>add to</strong>, csv.ts}</td>
+      <td><span class="tag tag-blue">~a</span></td>
+      <td>5</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>{auto-detect wiring into all import paths, <strong>update in</strong>, HomeScreen + ImportScreen + ScanScreen}</td>
+      <td><span class="tag tag-blue">~u</span></td>
+      <td>5</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>{defaultCategory setting, <strong>remove from</strong>, settings.ts + SettingsScreen}</td>
+      <td><span class="tag tag-blue">~d</span></td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>{6 dead screens/components, <strong>remove from</strong>, src/screens + src/components + src/types}</td>
+      <td><span class="tag tag-blue">~d</span></td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>{React error boundary, <strong>add to</strong>, App.tsx}</td>
+      <td><span class="tag tag-blue">~a</span></td>
+      <td>5</td>
+    </tr>
+    <tr><td colspan="3" style="text-align:right; font-weight:700; color:#6FC3DF;">Total</td><td style="font-weight:700;">21</td></tr>
+  </table>
+</div>
+
+<h2>Value Rationale</h2>
+<div class="card">
+  <table>
+    <tr><th>Order</th><th>Why</th></tr>
+    <tr><td>1. Auto-detect function</td><td>Core fix — without this, every item imports as motorcycles</td></tr>
+    <tr><td>2. Wire into imports</td><td>Depends on #1 — connects the function to all import paths</td></tr>
+    <tr><td>3. Remove setting</td><td>Clean UX — no more confusing selector that doesn't do anything</td></tr>
+    <tr><td>4. Dead code removal</td><td>Reduces confusion, smaller bundle, cleaner repo</td></tr>
+    <tr><td>5. Error boundary</td><td>Safety net — prevents white-screen crash during live demo</td></tr>
+  </table>
+</div>
+
+<h2>Dependencies</h2>
+<div class="card">
+  <p>Item 2 depends on Item 1 (can't wire what doesn't exist yet). All others are independent.</p>
+  <p style="margin-top:8px; color:#888;">After Board 1: <code>~t</code> to test, then <code>~s</code> to ship.</p>
+</div>
+
+</div>
+
+<footer>Generated 2026-04-02 10:50 &mdash; Be v2.1</footer>
+
+</body>
+</html>
