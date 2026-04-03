@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Build — Board 4: Real-time Sync</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #111111; color: #e0e0e0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 1.6; }
+  nav { position: sticky; top: 0; background: #000; border-bottom: 2px solid #6FC3DF; padding: 12px 24px; z-index: 100; display: flex; align-items: center; gap: 16px; }
+  nav .brand { color: #6FC3DF; font-weight: 700; font-size: 18px; }
+  nav .title { color: #999; font-size: 14px; }
+  .container { max-width: 800px; margin: 0 auto; padding: 24px 16px; }
+  h1 { color: #6FC3DF; font-size: 28px; margin-bottom: 8px; }
+  h2 { color: #6FC3DF; font-size: 20px; margin: 32px 0 12px; border-bottom: 1px solid #333; padding-bottom: 8px; }
+  .section { background: #1A1A1A; border-radius: 8px; padding: 20px; margin: 16px 0; }
+  ul { margin: 8px 0 8px 24px; }
+  li { margin: 4px 0; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid #333; }
+  th { color: #6FC3DF; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; }
+  td { color: #ccc; font-size: 14px; }
+  code { background: #222; padding: 2px 6px; border-radius: 4px; font-size: 13px; color: #6FC3DF; }
+  .done { color: #22c55e; font-weight: 600; }
+  .arch { background: #1a1a2e; border: 1px solid #333; border-radius: 8px; padding: 16px; margin: 12px 0; font-family: monospace; font-size: 13px; color: #6FC3DF; white-space: pre; overflow-x: auto; }
+  footer { text-align: center; color: #555; font-size: 12px; margin-top: 48px; padding: 24px; border-top: 1px solid #222; }
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="brand">Be</span>
+  <span class="title">Build — Board 4</span>
+</nav>
+
+<div class="container">
+  <h1>Board 4: Real-time Sync</h1>
+  <p style="color:#999;">3 items, 15 pts — all done</p>
+
+  <div class="section">
+    <h2>What Was Built</h2>
+    <table>
+      <tr><th>Item</th><th>Pts</th><th>Status</th></tr>
+      <tr><td>{room create + join + nickname system, add to, syncClient}</td><td>5</td><td class="done">✅</td></tr>
+      <tr><td>{real-time item overlay subscription + upsert on save, add to, syncClient + db.ts}</td><td>5</td><td class="done">✅</td></tr>
+      <tr><td>{shared comps cache — push to Supabase after fetch + check before Apify, update in, multiSourceComps}</td><td>5</td><td class="done">✅</td></tr>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>Architecture</h2>
+    <div class="arch">
+Phone A                    Supabase                   Phone B
+  │                           │                          │
+  ├─ saveItem(updated,old) ──▶│ item_overlays (upsert)   │
+  │                           │──▶ postgres_changes ─────▶│
+  │                           │                          ├─ applyOverlay()
+  │                           │                          │
+  ├─ searchComps(query) ─────▶│ shared_comps (upsert)    │
+  │                           │                          │
+  │                           │◀── searchComps(query) ───┤
+  │                           │    ↳ HIT → skip Apify $$ │
+  │                           │                          │
+  ├─ joinRoom(code,nick) ────▶│ presence.track()         │
+  │                           │──▶ presence.sync ────────▶│
+  │                           │                          │
+  └─ offlineQueue ────────────▶│ flushOnReconnect()       │</div>
+  </div>
+
+  <div class="section">
+    <h2>Files Changed</h2>
+    <ul>
+      <li><code>src/services/syncClient.ts</code> — Room create/join/leave, real-time subscription (postgres_changes on item_overlays + activity), Presence API, push/pull overlays, offline queue with localStorage, auto-rejoin on app start</li>
+      <li><code>src/utils/db.ts</code> — <code>saveItem(item, oldItem?)</code> now diffs syncable fields and calls <code>pushOverlay()</code> when in a room. New <code>applyOverlay()</code> applies remote changes to local IndexedDB without triggering a sync loop</li>
+      <li><code>src/services/multiSourceComps.ts</code> — Before Apify fetch, checks Supabase <code>shared_comps</code> table for room buddies' cached results. After fetch, pushes results to Supabase. Saves ~$0.03/search when a buddy already searched the same query</li>
+      <li><code>src/screens/ItemDetailScreen.tsx</code> — <code>handleSave()</code> passes old item for diff to enable overlay sync</li>
+      <li><code>src/App.tsx</code> — Wires <code>onOverlayChanged</code> → <code>applyOverlay</code> → <code>refreshCounts</code>, plus <code>autoRejoin()</code> on init</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>Sync Fields (Overlay Only)</h2>
+    <table>
+      <tr><th>Field</th><th>Local (IndexedDB)</th><th>Synced (Supabase)</th></tr>
+      <tr><td>status</td><td>✅</td><td>✅</td></tr>
+      <tr><td>maxBid</td><td>✅</td><td>✅</td></tr>
+      <tr><td>note</td><td>✅</td><td>✅</td></tr>
+      <tr><td>buddyTag</td><td>✅</td><td>✅</td></tr>
+      <tr><td>cachedComps</td><td>✅</td><td>—</td></tr>
+      <tr><td>cachedEstimate</td><td>✅</td><td>—</td></tr>
+      <tr><td>cachedIssues</td><td>✅</td><td>—</td></tr>
+    </table>
+    <p style="color:#888;margin-top:8px;font-size:13px;">Only user-editable fields sync. Heavy cached data stays local — keeps payloads small and fast.</p>
+  </div>
+
+  <div class="section">
+    <h2>What's Next</h2>
+    <p>Board 5 is now unblocked — Sync UX + Offline (15 pts):</p>
+    <ul>
+      <li>Room create/join UI + presence display in SettingsScreen</li>
+      <li>Offline write queue + auto-flush on reconnect</li>
+      <li>Sync status dot + activity feed in App header</li>
+    </ul>
+  </div>
+</div>
+
+<footer>Generated 2026-04-03 00:35</footer>
+</body>
+</html>
