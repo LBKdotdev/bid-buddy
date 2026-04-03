@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { RefreshCw, Calculator, Search, Upload, Download, FileUp, Trash2, ChevronRight, List, FileText, Settings } from 'lucide-react';
 import type { InventoryItem } from '../types/inventory';
 import { parseCSV, csvRowToInventoryItem, detectCategory } from '../utils/csv';
-import { parsePDF, parseCatalogPDF } from '../utils/pdfParser';
+import { parseCatalogPDF } from '../utils/pdfParser';
 import { saveItems, getAllItems, getItem, deleteAllItems } from '../utils/db';
 import { getSettings } from '../utils/settings';
 
@@ -31,7 +31,6 @@ export default function HomeScreen({
 }: HomeScreenProps) {
   const [syncing, setSyncing] = useState(false);
   const [showMore, setShowMore] = useState(false);
-  const [importingCatalog, setImportingCatalog] = useState<'motorcycles' | 'rv_marine' | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const jsonInputRef = useRef<HTMLInputElement>(null);
   const catalogInputRef = useRef<HTMLInputElement>(null);
@@ -97,7 +96,7 @@ export default function HomeScreen({
       let rows: any[];
 
       if (file.name.toLowerCase().endsWith('.pdf')) {
-        rows = await parsePDF(file);
+        rows = await parseCatalogPDF(file);
       } else {
         const text = await file.text();
         rows = parseCSV(text);
@@ -179,21 +178,15 @@ export default function HomeScreen({
     }
   };
 
-  const handleCatalogImport = (type: 'motorcycles' | 'rv_marine') => {
-    setImportingCatalog(type);
-    catalogInputRef.current?.click();
-  };
-
   const handleCatalogFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file || !importingCatalog) return;
+    if (!file) return;
 
     setSyncing(true);
     try {
-      const catalogType = importingCatalog;
-      console.log(`Importing ${catalogType} catalog:`, file.name);
+      console.log('Importing catalog:', file.name);
 
-      const parsedItems = await parseCatalogPDF(file, catalogType);
+      const parsedItems = await parseCatalogPDF(file);
 
       if (parsedItems.length === 0) {
         alert('No items found in PDF. Check the file format.');
@@ -243,13 +236,12 @@ export default function HomeScreen({
 
       const timestamp = new Date().toLocaleString();
       onImportSuccess(items, items.length, timestamp);
-      alert(`Imported ${items.length} items from ${catalogType === 'rv_marine' ? 'RV/Marine' : 'Motorcycle'} catalog!`);
+      alert(`Imported ${items.length} items from catalog!`);
     } catch (error) {
       console.error('Catalog import error:', error);
       alert(error instanceof Error ? error.message : 'Import failed');
     } finally {
       setSyncing(false);
-      setImportingCatalog(null);
       if (catalogInputRef.current) catalogInputRef.current.value = '';
     }
   };
@@ -365,34 +357,21 @@ export default function HomeScreen({
         )}
 
         {/* NPA Catalog Import */}
-        <div className="card p-4">
-          <div className="text-sm font-medium text-zinc-400 mb-3">Import NPA Catalog PDF</div>
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              onClick={() => handleCatalogImport('motorcycles')}
-              disabled={syncing}
-              className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-electric/10 border border-electric/30 text-electric font-medium text-sm active:bg-electric/20 disabled:opacity-50"
-            >
-              <FileText size={18} />
-              Motorcycles
-            </button>
-            <button
-              onClick={() => handleCatalogImport('rv_marine')}
-              disabled={syncing}
-              className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-status-info/10 border border-status-info/30 text-status-info font-medium text-sm active:bg-status-info/20 disabled:opacity-50"
-            >
-              <FileText size={18} />
-              RV / Marine
-            </button>
-          </div>
-          <input
-            ref={catalogInputRef}
-            type="file"
-            accept=".pdf"
-            onChange={handleCatalogFileSelect}
-            className="hidden"
-          />
-        </div>
+        <button
+          onClick={() => catalogInputRef.current?.click()}
+          disabled={syncing}
+          className="w-full card p-4 flex items-center justify-center gap-3 active:bg-surface-600 disabled:opacity-50 transition-colors"
+        >
+          <FileText size={20} className="text-electric" />
+          <span className="text-electric font-medium">Import NPA Catalog PDF</span>
+        </button>
+        <input
+          ref={catalogInputRef}
+          type="file"
+          accept=".pdf"
+          onChange={handleCatalogFileSelect}
+          className="hidden"
+        />
 
         {/* More Options Toggle */}
         <button
