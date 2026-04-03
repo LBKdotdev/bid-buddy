@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plan — Shared State + Search Settings</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #111111; color: #e0e0e0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 1.6; }
+  nav { position: sticky; top: 0; background: #000; border-bottom: 2px solid #6FC3DF; padding: 12px 24px; z-index: 100; display: flex; align-items: center; gap: 16px; }
+  nav .brand { color: #6FC3DF; font-weight: 700; font-size: 18px; }
+  nav .title { color: #999; font-size: 14px; }
+  .container { max-width: 800px; margin: 0 auto; padding: 24px 16px; }
+  h1 { color: #6FC3DF; font-size: 28px; margin-bottom: 8px; }
+  h2 { color: #6FC3DF; font-size: 20px; margin: 32px 0 12px; border-bottom: 1px solid #333; padding-bottom: 8px; }
+  h3 { color: #e0e0e0; font-size: 16px; margin: 20px 0 8px; }
+  .banner { background: #6FC3DF22; border: 1px solid #6FC3DF44; border-radius: 8px; padding: 12px 20px; margin: 16px 0; color: #6FC3DF; font-weight: 600; text-align: center; }
+  .section { background: #1A1A1A; border-radius: 8px; padding: 20px; margin: 16px 0; }
+  ul { margin: 8px 0 8px 24px; }
+  li { margin: 4px 0; }
+  .phase { background: #1A1A1A; border-radius: 8px; padding: 20px; margin: 16px 0; border-left: 3px solid #6FC3DF; }
+  .phase-num { color: #6FC3DF; font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; margin-left: 8px; }
+  .tag-quick { background: #22c55e22; color: #22c55e; }
+  .tag-big { background: #f59e0b22; color: #f59e0b; }
+  .tag-critical { background: #ef444422; color: #ef4444; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid #333; }
+  th { color: #6FC3DF; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; }
+  td { color: #ccc; font-size: 14px; }
+  code { background: #222; padding: 2px 6px; border-radius: 4px; font-size: 13px; color: #6FC3DF; }
+  footer { text-align: center; color: #555; font-size: 12px; margin-top: 48px; padding: 24px; border-top: 1px solid #222; }
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="brand">Be</span>
+  <span class="title">Plan — Shared State + Search Settings</span>
+</nav>
+
+<div class="container">
+  <h1>Plan: Shared State + Search Settings</h1>
+  <p style="color:#999;">Bid Buddy — Multi-user sync + configurable comp search regions</p>
+
+  <div class="banner">Plan — Awaiting Approval</div>
+
+  <div class="section">
+    <h2>Intent</h2>
+    <p>Three people on the auction floor, same inventory, same day. Right now each phone is an island — edits, notes, max bids, and comps don't travel between devices. When Scotty marks a Teryx "interested" with a $4,200 max bid, Joey and the third person don't see it. That's a problem at speed.</p>
+    <p style="margin-top:12px;">Secondary: comp searches are locked to hardcoded regions and result counts. The team needs to dial in radius, pick regions, and control how many results come back — especially when Apify dollars are on the line.</p>
+  </div>
+
+  <div class="section">
+    <h2>Scope</h2>
+    <h3>In Scope</h3>
+    <ul>
+      <li>Shared inventory state — status, notes, maxBid, buddyTag sync across devices in real-time</li>
+      <li>Shared comps cache — one person runs a deep search, everyone benefits</li>
+      <li>Search settings — radius slider, region picker, results-per-source control</li>
+      <li>Conflict handling — last-write-wins with user attribution ("Joey set max bid $4,200 at 2:14pm")</li>
+      <li>Offline resilience — keep working if signal drops, sync when back</li>
+    </ul>
+    <h3>Out of Scope</h3>
+    <ul>
+      <li>User accounts / auth — this is a team tool, not a public app. Shared key or room code is enough.</li>
+      <li>Chat / messaging between users</li>
+      <li>Inventory write conflicts on import (import is always additive/merge, same as now)</li>
+      <li>Moving off Vercel — keep the existing API functions where they are</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>Approach</h2>
+
+    <h3>Backend: Cloudflare D1 + Workers</h3>
+    <p>Joey's stack preference. D1 is SQLite at the edge — fast reads, global, free tier covers this use case. One Worker handles the sync API. Tables:</p>
+
+    <table>
+      <tr><th>Table</th><th>Purpose</th><th>Key Fields</th></tr>
+      <tr><td><code>rooms</code></td><td>Team session</td><td>room_code, created_at, expires_at</td></tr>
+      <tr><td><code>items</code></td><td>Shared inventory state</td><td>id, item_number, status, max_bid, note, buddy_tag, updated_by, updated_at</td></tr>
+      <tr><td><code>comps_cache</code></td><td>Shared comp results</td><td>query_hash, results_json, fetched_at, fetched_by</td></tr>
+      <tr><td><code>activity</code></td><td>Change log</td><td>item_id, field, old_value, new_value, user, timestamp</td></tr>
+    </table>
+
+    <p style="margin-top:12px;">The <code>items</code> table stores only the <strong>overlay</strong> — status, notes, maxBid, buddyTag. The full inventory (year, make, model, VIN, etc.) stays in IndexedDB. This keeps the sync payload tiny and fast.</p>
+
+    <h3>Sync Model: Poll + Push</h3>
+    <ul>
+      <li><strong>On edit:</strong> POST change to D1 immediately → update local IndexedDB</li>
+      <li><strong>Background poll:</strong> Every 10 seconds, GET changes since last sync timestamp</li>
+      <li><strong>On app open:</strong> Full pull of room state → merge into local DB</li>
+      <li><strong>Offline:</strong> Queue edits in localStorage → flush when back online</li>
+      <li><strong>Conflict:</strong> Last-write-wins by <code>updated_at</code>. Activity log preserves history.</li>
+    </ul>
+
+    <h3>Room System (No Auth)</h3>
+    <p>On Settings screen: "Create Room" generates a 6-digit code. Others enter it to join. Room expires after 24 hours (covers a full auction day). No passwords, no logins — just a code you share verbally on the floor.</p>
+
+    <h3>Search Settings</h3>
+    <p>Add to the existing Settings screen under Comps Lookup:</p>
+    <ul>
+      <li><strong>Search Radius:</strong> Slider 50–300 miles (currently hardcoded 150). Sent as <code>radius</code> param to fetch-comps.</li>
+      <li><strong>Regions:</strong> Multi-select checkboxes — SoCal, NorCal, Phoenix, Vegas, Dallas, Houston, Orlando. Currently auto-detected from zip. Let user override.</li>
+      <li><strong>Results per source:</strong> Slider 5–50 (eBay max, CL limit per location, FB resultsLimit). Currently hardcoded 25/10/15.</li>
+      <li><strong>Persist in settings</strong> — flows through to <code>/api/fetch-comps</code> as new POST body fields.</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>Phases</h2>
+
+    <div class="phase">
+      <span class="phase-num">Phase 1 — Search Settings</span>
+      <span class="tag tag-quick">Quick Win</span>
+      <p style="margin-top:8px;">Add radius slider, region picker, and results-per-source to Settings. Wire through to fetch-comps API. No backend change — just passing new params.</p>
+      <ul>
+        <li>Add <code>searchRadius</code>, <code>searchRegions</code>, <code>resultsPerSource</code> to AppSettings</li>
+        <li>Add UI controls in SettingsScreen</li>
+        <li>Pass new params from multiSourceComps → fetch-comps POST body</li>
+        <li>Update fetch-comps.js to respect incoming radius/regions/limits</li>
+      </ul>
+    </div>
+
+    <div class="phase">
+      <span class="phase-num">Phase 2 — D1 Schema + Worker</span>
+      <span class="tag tag-big">Backend</span>
+      <p style="margin-top:8px;">Stand up the Cloudflare D1 database and Worker API. Room create/join, item overlay CRUD, activity log.</p>
+      <ul>
+        <li>Create D1 database + schema (rooms, items, comps_cache, activity)</li>
+        <li>Worker endpoints: POST /room/create, POST /room/join, GET /room/:code/sync, POST /room/:code/item, POST /room/:code/comps</li>
+        <li>Deploy Worker to Cloudflare</li>
+        <li>Test with curl / Postman</li>
+      </ul>
+    </div>
+
+    <div class="phase">
+      <span class="phase-num">Phase 3 — Sync Client</span>
+      <span class="tag tag-big">Frontend</span>
+      <p style="margin-top:8px;">Build the sync engine on the client side. Offline queue, background polling, merge logic.</p>
+      <ul>
+        <li>New: <code>src/services/syncClient.ts</code> — room state, poll loop, offline queue</li>
+        <li>Hook into <code>saveItem()</code> — after local write, push overlay to D1</li>
+        <li>Background poll: GET changes → merge into IndexedDB</li>
+        <li>Offline detection + localStorage queue</li>
+        <li>Comps cache sharing — after fresh fetch, push to D1; before fetch, check D1 cache</li>
+      </ul>
+    </div>
+
+    <div class="phase">
+      <span class="phase-num">Phase 4 — Room UI</span>
+      <span class="tag tag-quick">Frontend</span>
+      <p style="margin-top:8px;">Settings screen additions — room create/join, connected users indicator, sync status badge.</p>
+      <ul>
+        <li>Room section in Settings: Create Room button → shows 6-digit code</li>
+        <li>Join Room: 6-digit input → connects to existing room</li>
+        <li>Sync indicator in app header: green dot = synced, yellow = syncing, red = offline</li>
+        <li>Activity feed: "Joey set TERYX4 max bid $4,200" — last 20 changes</li>
+      </ul>
+    </div>
+
+    <div class="phase">
+      <span class="phase-num">Phase 5 — Floor Test</span>
+      <span class="tag tag-critical">Validation</span>
+      <p style="margin-top:8px;">Three phones, one room, live auction inventory. Verify sync latency, offline recovery, conflict handling.</p>
+      <ul>
+        <li>Import same NPA catalog on all 3 devices</li>
+        <li>Create room on phone A, join from B and C</li>
+        <li>Edit items on different phones → verify sync within 10s</li>
+        <li>Kill signal on one phone → edit → restore signal → verify queue flush</li>
+        <li>Run comps on phone A → verify cache appears on B and C</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Constraints</h2>
+    <ul>
+      <li><strong>D1 free tier:</strong> 5M reads/day, 100K writes/day, 5GB storage. More than enough for 3 users, 1000 items, 1 auction day.</li>
+      <li><strong>No auth:</strong> Room codes are security-by-obscurity. Fine for a team tool — not for public release.</li>
+      <li><strong>Sync is overlay-only:</strong> Full item data (VIN, year, make, model, photos) stays local. Only status/notes/maxBid/buddyTag sync. Keeps payloads small, avoids import conflicts.</li>
+      <li><strong>Last-write-wins:</strong> If Joey and Scotty edit the same item's note at the same time, the later write wins. Activity log preserves both versions for recovery.</li>
+      <li><strong>10-second poll:</strong> Not true real-time (would need WebSockets). Acceptable for auction floor pace — you're not trading stocks.</li>
+      <li><strong>24-hour rooms:</strong> Auto-expire. No long-term state management. Each auction day is a fresh room.</li>
+      <li><strong>Existing Vercel API stays:</strong> fetch-comps, fetch-npa-inventory, scan-tag remain on Vercel. D1 Worker handles only sync. Two hosts, clean separation.</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>Data Flow — After Sync</h2>
+    <table>
+      <tr><th>Action</th><th>Local</th><th>Remote (D1)</th><th>Other Devices</th></tr>
+      <tr><td>Import NPA catalog</td><td>Full items → IndexedDB</td><td>Nothing (import is local)</td><td>Each device imports independently</td></tr>
+      <tr><td>Set status "interested"</td><td>IndexedDB update</td><td>POST overlay → D1 items</td><td>Poll picks up change in ≤10s</td></tr>
+      <tr><td>Set max bid $4,200</td><td>IndexedDB update</td><td>POST overlay → D1 items</td><td>Poll picks up change in ≤10s</td></tr>
+      <tr><td>Run comp search</td><td>localStorage cache</td><td>POST results → D1 comps_cache</td><td>Next comp lookup hits D1 first</td></tr>
+      <tr><td>Go offline</td><td>Queue edits in localStorage</td><td>Nothing</td><td>Nothing (stale until reconnect)</td></tr>
+      <tr><td>Come back online</td><td>Flush queue → POST each edit</td><td>Accepts writes, returns full state</td><td>Next poll sees all queued changes</td></tr>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>File Impact</h2>
+    <table>
+      <tr><th>File</th><th>Change</th></tr>
+      <tr><td><code>src/utils/settings.ts</code></td><td>Add searchRadius, searchRegions, resultsPerSource fields</td></tr>
+      <tr><td><code>src/screens/SettingsScreen.tsx</code></td><td>Radius slider, region picker, results control, Room UI</td></tr>
+      <tr><td><code>src/services/multiSourceComps.ts</code></td><td>Pass new search params, check D1 comps cache before Apify</td></tr>
+      <tr><td><code>api/fetch-comps.js</code></td><td>Respect incoming radius/regions/limits params</td></tr>
+      <tr><td><code>src/services/syncClient.ts</code></td><td>New — room state, poll loop, offline queue, merge</td></tr>
+      <tr><td><code>src/utils/db.ts</code></td><td>Hook saveItem to push overlay after local write</td></tr>
+      <tr><td><code>src/App.tsx</code></td><td>Sync status indicator, init sync on mount</td></tr>
+      <tr><td><code>cloudflare/worker.js</code></td><td>New — D1 Worker API (room CRUD, item overlay, comps cache)</td></tr>
+      <tr><td><code>cloudflare/schema.sql</code></td><td>New — D1 table definitions</td></tr>
+    </table>
+  </div>
+
+</div>
+
+<footer>Generated 2026-04-02 23:50</footer>
+
+</body>
+</html>
