@@ -1,5 +1,6 @@
 // Multi-source comps aggregator - uses Vercel serverless functions
 // Sources: eBay Sold (free), Facebook Marketplace (Apify), Craigslist (Apify)
+import { logApifySearch } from '../utils/apifyUsage';
 
 export interface Comp {
   title: string;
@@ -57,6 +58,9 @@ export async function searchAllSources(
     const data = await response.json();
 
     console.log(`Found: eBay=${data.sources?.ebay || 0}, Facebook=${data.sources?.facebook || 0}, Craigslist=${data.sources?.craigslist || 0}`);
+
+    // Log Apify usage for cost tracking
+    logApifySearch(query, enabledSources || [], (data.comps || []).length);
 
     return {
       comps: data.comps || [],

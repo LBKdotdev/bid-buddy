@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Wifi, WifiOff, Brain, Database, BarChart3, RotateCcw, Trash2, Check, Info } from 'lucide-react';
+import { ArrowLeft, Wifi, WifiOff, Brain, Database, BarChart3, RotateCcw, Trash2, Check, Info, Activity } from 'lucide-react';
 import { getSettings, saveSettings, resetSettings, clearAllCaches, type AppSettings } from '../utils/settings';
+import { getMonthlyStats, setMonthlyBudget } from '../utils/apifyUsage';
 
 interface SettingsScreenProps {
   onBack: () => void;
@@ -10,6 +11,7 @@ export default function SettingsScreen({ onBack }: SettingsScreenProps) {
   const [settings, setSettings] = useState<AppSettings>(getSettings);
   const [saved, setSaved] = useState(false);
   const [cacheCleared, setCacheCleared] = useState(false);
+  const [apifyStats, setApifyStats] = useState(getMonthlyStats());
 
   const update = (partial: Partial<AppSettings>) => {
     const merged = saveSettings(partial);
@@ -212,6 +214,93 @@ export default function SettingsScreen({ onBack }: SettingsScreenProps) {
                   </button>
                 </label>
               ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Apify Usage Gauge */}
+        <section>
+          <div className="flex items-center gap-2 mb-3">
+            <Activity size={16} className="text-status-warning" />
+            <h2 className="text-sm font-semibold text-zinc-300 uppercase tracking-wider">Apify Usage</h2>
+          </div>
+          <div className="card p-4 space-y-4">
+            {/* Month label */}
+            <div className="flex justify-between items-center">
+              <span className="text-xs text-zinc-500 uppercase tracking-wider">
+                {new Date().toLocaleString('default', { month: 'long', year: 'numeric' })}
+              </span>
+              <span className="text-xs text-zinc-500">{apifyStats.count} searches</span>
+            </div>
+
+            {/* Cost gauge */}
+            <div>
+              <div className="flex justify-between items-baseline mb-1.5">
+                <span className="text-2xl font-bold text-white tabular-nums">${apifyStats.estCost.toFixed(2)}</span>
+                <span className="text-sm text-zinc-500">/ ${apifyStats.budget.toFixed(2)}</span>
+              </div>
+              <div className="w-full h-3 bg-surface-700 rounded-full overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all ${
+                    apifyStats.estCost / apifyStats.budget > 0.9
+                      ? 'bg-status-danger'
+                      : apifyStats.estCost / apifyStats.budget > 0.6
+                      ? 'bg-status-warning'
+                      : 'bg-status-success'
+                  }`}
+                  style={{ width: `${Math.min(100, (apifyStats.estCost / apifyStats.budget) * 100)}%` }}
+                />
+              </div>
+              <div className="flex justify-between text-xs text-zinc-600 mt-1">
+                <span>$0</span>
+                <span>${(apifyStats.budget / 2).toFixed(2)}</span>
+                <span>${apifyStats.budget.toFixed(2)}</span>
+              </div>
+            </div>
+
+            {/* Budget slider */}
+            <div>
+              <div className="flex items-center justify-between">
+                <label className="text-sm text-zinc-300 font-medium">Monthly Budget</label>
+                <span className="text-sm text-status-warning font-mono">${apifyStats.budget.toFixed(2)}</span>
+              </div>
+              <p className="text-xs text-zinc-500 mt-0.5 mb-3">
+                Display-only — warns you when approaching limit
+              </p>
+              <input
+                type="range"
+                min="1"
+                max="25"
+                step="1"
+                value={apifyStats.budget}
+                onChange={(e) => {
+                  const newBudget = parseFloat(e.target.value);
+                  setMonthlyBudget(newBudget);
+                  setApifyStats({ ...apifyStats, budget: newBudget });
+                }}
+                className="w-full accent-amber-500"
+              />
+              <div className="flex justify-between text-xs text-zinc-600 mt-1">
+                <span>$1</span>
+                <span>$13</span>
+                <span>$25</span>
+              </div>
+            </div>
+
+            {/* Cost breakdown */}
+            <div className="pt-2 border-t border-surface-500/30 space-y-1.5">
+              <div className="flex justify-between text-xs">
+                <span className="text-zinc-500">Craigslist (Apify)</span>
+                <span className="text-zinc-400">~$0.03/search</span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-zinc-500">Facebook (Apify)</span>
+                <span className="text-zinc-400">~$0.035/search</span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-zinc-500">eBay</span>
+                <span className="text-status-success">Free</span>
+              </div>
             </div>
           </div>
         </section>

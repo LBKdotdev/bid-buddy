@@ -10,6 +10,7 @@ import { getAIEstimate, type EstimateResult } from '../services/aiEstimate';
 import { searchCompsWithCache, clearCompsCache, type Comp as MarketComp, type MultiSourceResult } from '../services/multiSourceComps';
 import { getKnownIssues, type KnownIssuesResult } from '../services/knownIssues';
 import type { CachedIssues } from '../types/inventory';
+import { cleanNpaModel } from '../utils/queryClean';
 
 interface ItemDetailScreenProps {
   itemId: string;
@@ -159,8 +160,9 @@ export default function ItemDetailScreen({ itemId, onClose }: ItemDetailScreenPr
 
   const autoFetchComps = async (itemData: InventoryItem) => {
     try {
-      // Search specific variant first (e.g. "CAN-AM RYKER 600")
-      const specificModel = itemData.model.replace(/\s+(ACE|SE|LE|S|BASE|SPORT|RALLY|LIMITED|SPECIAL|EDITION|CAMO|EPS|DLX|ES)\b/gi, '').trim();
+      // Strip NPA internal codes, then trim → "TERYX4 LE" not "KRT800GJF TERYX4 LE"
+      const cleanModel = cleanNpaModel(itemData.model);
+      const specificModel = cleanModel.replace(/\s+(ACE|SE|LE|S|BASE|SPORT|RALLY|LIMITED|SPECIAL|EDITION|CAMO|EPS|DLX|ES)\b/gi, '').trim();
       const searchQuery = [itemData.make, specificModel].filter(Boolean).join(' ');
       if (!searchQuery) return;
 
@@ -169,7 +171,7 @@ export default function ItemDetailScreen({ itemId, onClose }: ItemDetailScreenPr
 
       // If < 3 results, broaden and filter
       if (result.comps.length < 3) {
-        const broadModel = itemData.model.replace(/\s*\d{3,4}\s*/g, ' ').replace(/\s+(ACE|SE|LE|S|BASE|SPORT|RALLY|LIMITED|SPECIAL|EDITION|CAMO|EPS|DLX|ES)\b/gi, '').trim();
+        const broadModel = cleanModel.replace(/\s*\d{3,4}\s*/g, ' ').replace(/\s+(ACE|SE|LE|S|BASE|SPORT|RALLY|LIMITED|SPECIAL|EDITION|CAMO|EPS|DLX|ES)\b/gi, '').trim();
         const broadQuery = [itemData.make, broadModel].filter(Boolean).join(' ');
         if (broadQuery !== searchQuery) {
           console.log('Broadening auto-fetch to:', broadQuery);
@@ -264,13 +266,14 @@ export default function ItemDetailScreen({ itemId, onClose }: ItemDetailScreenPr
   // Build search queries from specific → broad
   const getSearchQueries = () => {
     if (!item) return { specific: '', broad: '' };
-    const fullModel = item.model; // "RYKER 600 ACE"
+    // Strip NPA internal codes (e.g., "KRT800GJF TERYX4 LE" → "TERYX4 LE")
+    const fullModel = cleanNpaModel(item.model);
 
-    // Specific: keep variant number, drop trim → "RYKER 600"
+    // Specific: keep variant number, drop trim → "TERYX4"
     const specificModel = fullModel.replace(/\s+(ACE|SE|LE|S|BASE|SPORT|RALLY|LIMITED|SPECIAL|EDITION|CAMO|EPS|DLX|ES)\b/gi, '').trim();
     const specific = [item.make, specificModel].filter(Boolean).join(' ');
 
-    // Broad: drop everything → "RYKER"
+    // Broad: drop everything → "TERYX"
     const broadModel = fullModel.replace(/\s*\d{3,4}\s*/g, ' ').replace(/\s+(ACE|SE|LE|S|BASE|SPORT|RALLY|LIMITED|SPECIAL|EDITION|CAMO|EPS|DLX|ES)\b/gi, '').trim();
     const broad = [item.make, broadModel].filter(Boolean).join(' ');
 
@@ -285,8 +288,8 @@ export default function ItemDetailScreen({ itemId, onClose }: ItemDetailScreenPr
   // Price correction system — saves dealer knowledge for this make/model
   const getPriceCorrectionKey = () => {
     if (!item) return '';
-    // Normalize: "CAN-AM|RYKER 600" — includes variant for accuracy
-    const specificModel = item.model.replace(/\s+(ACE|SE|LE|S|BASE|SPORT|RALLY|LIMITED|SPECIAL|EDITION|CAMO|EPS|DLX|ES)\b/gi, '').trim();
+    // Normalize: "CAN-AM|TERYX4" — strip NPA codes, includes variant for accuracy
+    const specificModel = cleanNpaModel(item.model).replace(/\s+(ACE|SE|LE|S|BASE|SPORT|RALLY|LIMITED|SPECIAL|EDITION|CAMO|EPS|DLX|ES)\b/gi, '').trim();
     return `price-correction|${item.make}|${specificModel}`.toLowerCase();
   };
 
