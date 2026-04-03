@@ -61,10 +61,10 @@ Source: plan-shared-state-supabase.html → estimate-shared-state-supabase.html
 ## Board 5 — Sync UX + Offline (15 pts)
 
 ### Ready
-- {sync status dot + activity feed, add to, App header + SettingsScreen} · 5 pts · ~a
 
 ### In Progress
-- {room create/join UI + presence display, add to, SettingsScreen} · 5 pts · ~a
 
 ### Done
 - {offline write queue + auto-flush on reconnect, add to, syncClient} · 5 pts · ~a ✅ via 9c3bfa7
+- {room create/join UI + presence display, add to, SettingsScreen} · 5 pts · ~a ✅
+- {sync status dot + activity feed, add to, App header + SettingsScreen} · 5 pts · ~a ✅

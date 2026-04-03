@@ -11,7 +11,7 @@ import CompsScreen from './screens/CompsScreen';
 import AllListingsScreen from './screens/AllListingsScreen';
 import SettingsScreen from './screens/SettingsScreen';
 import { initDB, getAllItems, applyOverlay } from './utils/db';
-import { autoRejoin, onOverlayChanged, onConnectionStatus } from './services/syncClient';
+import { autoRejoin, onOverlayChanged, onConnectionStatus, getCurrentRoom } from './services/syncClient';
 
 
 // Clear old comps cache versions on startup
@@ -46,6 +46,7 @@ function App() {
   const [shortlistCount, setShortlistCount] = useState(0);
   const [lastImportCount, setLastImportCount] = useState(0);
   const [lastImportTime, setLastImportTime] = useState('');
+  const [syncConnected, setSyncConnected] = useState(false);
 
   const refreshCounts = useCallback(async () => {
     try {
@@ -87,6 +88,7 @@ function App() {
       });
 
       onConnectionStatus((connected) => {
+        setSyncConnected(connected);
         console.log('Sync status:', connected ? 'connected' : 'disconnected');
       });
 
@@ -181,6 +183,17 @@ function App() {
         {currentTab === 'floor' && <FloorScreen />}
         {currentTab === 'scan' && <ScanScreen onSelectItem={handleItemClick} />}
       </div>
+
+      {/* Sync status dot — tapping opens settings */}
+      {syncConnected && (
+        <button
+          onClick={() => setShowSettings(true)}
+          className="fixed top-14 right-4 z-50 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-800/90 backdrop-blur border border-surface-500/30"
+        >
+          <span className="w-2 h-2 rounded-full bg-status-success animate-pulse" />
+          <span className="text-[10px] text-zinc-400 font-medium">{getCurrentRoom()}</span>
+        </button>
+      )}
 
       <BottomNav currentTab={currentTab} onTabChange={setCurrentTab} />
 
