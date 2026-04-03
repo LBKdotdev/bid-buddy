@@ -115,5 +115,18 @@
     "tokens": null,
     "cost_usd": null,
     "commit": null
+  },
+  {
+    "triple": "{PDF import overhaul, shipped from, bid-buddy}",
+    "command": "~s",
+    "description": "Ship — PDF import overhaul, Board 2, 6 commits, supabase removed",
+    "project": "bid-buddy",
+    "repo": "LBKdotdev/bid-buddy",
+    "date": "2026-04-03",
+    "time": "00:02",
+    "duration_sec": 60,
+    "tokens": null,
+    "cost_usd": null,
+    "commit": null
   }
 ]

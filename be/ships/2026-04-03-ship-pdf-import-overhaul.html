@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ship — PDF Import Overhaul</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #111111; color: #e0e0e0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 1.6; }
+  nav { position: sticky; top: 0; background: #000; border-bottom: 2px solid #6FC3DF; padding: 12px 24px; z-index: 100; display: flex; align-items: center; gap: 16px; }
+  nav .brand { color: #6FC3DF; font-weight: 700; font-size: 18px; }
+  nav .title { color: #999; font-size: 14px; }
+  .container { max-width: 800px; margin: 0 auto; padding: 24px 16px; }
+  h1 { color: #6FC3DF; font-size: 28px; margin-bottom: 8px; }
+  h2 { color: #6FC3DF; font-size: 20px; margin: 32px 0 12px; border-bottom: 1px solid #333; padding-bottom: 8px; }
+  .section { background: #1A1A1A; border-radius: 8px; padding: 20px; margin: 16px 0; }
+  ul { margin: 8px 0 8px 24px; }
+  li { margin: 4px 0; }
+  code { background: #2a2a2a; padding: 2px 6px; border-radius: 3px; font-size: 13px; }
+  .commit { color: #6FC3DF; font-family: monospace; font-size: 12px; }
+  footer { text-align: center; color: #555; font-size: 12px; margin-top: 48px; padding: 24px; border-top: 1px solid #222; }
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="brand">Be</span>
+  <span class="title">Ship — PDF Import Overhaul</span>
+</nav>
+
+<div class="container">
+  <h1>Shipped: PDF Import Overhaul</h1>
+  <p style="color:#999;">Board 2 — 5 items, 19 pts, 6 commits</p>
+
+  <div class="section">
+    <h2>What Shipped</h2>
+    <ul>
+      <li>Full PDF import pipeline for both NPA catalog types</li>
+      <li>Auto-detect motorcycle vs RVM from filename</li>
+      <li>4 new data fields: color, zone, bookValue, conditionDetail</li>
+      <li>Supabase completely removed — Vercel serverless only</li>
+      <li>Tested against real NPA catalogs: 569 moto + 27 RVM items</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>Commits Included</h2>
+    <ul>
+      <li><span class="commit">c99fcf0</span> ~p: plan PDF import overhaul</li>
+      <li><span class="commit">49c59b4</span> ~e: estimate — 1 board, 5 items, 19 pts</li>
+      <li><span class="commit">c4c89ae</span> ~a: add color, zone, bookValue, conditionDetail to InventoryItem</li>
+      <li><span class="commit">9a57363</span> ~u: rewrite pdfParser — auto-detect + full field extraction</li>
+      <li><span class="commit">2ec0f13</span> ~d: remove supabase/ folder, SDK dep, stale refs</li>
+      <li><span class="commit">9ed9c78</span> ~b: Board 2 complete — build + test reports</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>Deploy Target</h2>
+    <p>Vercel (auto-deploy from main branch)</p>
+  </div>
+
+</div>
+
+<footer>Generated 2026-04-03 00:02</footer>
+
+</body>
+</html>
