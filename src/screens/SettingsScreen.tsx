@@ -1,7 +1,15 @@
-import { useState, useEffect } from 'react';
-import { ArrowLeft, Wifi, WifiOff, Brain, Database, BarChart3, RotateCcw, Trash2, Check, Info, Activity, MapPin } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { ArrowLeft, Wifi, WifiOff, Brain, Database, BarChart3, RotateCcw, Trash2, Check, Info, Activity, MapPin, Users, LogOut, Copy, Loader2 } from 'lucide-react';
 import { getSettings, saveSettings, resetSettings, clearAllCaches, type AppSettings } from '../utils/settings';
 import { getMonthlyStats, setMonthlyBudget } from '../utils/apifyUsage';
+import {
+  createRoom, joinRoom, leaveRoom, pullAllOverlays,
+  getCurrentRoom, getCurrentNickname, getSavedSync, isInRoom,
+  onPresenceChanged, onConnectionStatus, onActivityReceived,
+  getRecentActivity,
+} from '../services/syncClient';
+import { applyOverlay } from '../utils/db';
+import { isSupabaseConfigured } from '../lib/supabase';
 
 interface SettingsScreenProps {
   onBack: () => void;
@@ -12,6 +20,95 @@ export default function SettingsScreen({ onBack }: SettingsScreenProps) {
   const [saved, setSaved] = useState(false);
   const [cacheCleared, setCacheCleared] = useState(false);
   const [apifyStats, setApifyStats] = useState(getMonthlyStats());
+
+  // Buddy Room state
+  const [roomCode, setRoomCode] = useState('');
+  const [nickname, setNickname] = useState('');
+  const [connected, setConnected] = useState(isInRoom());
+  const [activeRoom, setActiveRoom] = useState(getCurrentRoom());
+  const [activeNick, setActiveNick] = useState(getCurrentNickname());
+  const [buddies, setBuddies] = useState<string[]>([]);
+  const [roomLoading, setRoomLoading] = useState(false);
+  const [roomError, setRoomError] = useState('');
+  const [activityLog, setActivityLog] = useState<any[]>([]);
+  const [codeCopied, setCodeCopied] = useState(false);
+
+  // Init from saved state
+  useEffect(() => {
+    const saved = getSavedSync();
+    if (saved.nickname) setNickname(saved.nickname);
+    if (saved.roomCode) setRoomCode(saved.roomCode);
+
+    // Wire up presence + connection callbacks
+    onPresenceChanged((users) => setBuddies(users));
+    onConnectionStatus((status) => {
+      setConnected(status);
+      if (status) {
+        setActiveRoom(getCurrentRoom());
+        setActiveNick(getCurrentNickname());
+      }
+    });
+    onActivityReceived((entry) => {
+      setActivityLog(prev => [entry, ...prev].slice(0, 20));
+    });
+
+    // Load recent activity if already in room
+    if (isInRoom()) {
+      getRecentActivity(10).then(entries => setActivityLog(entries));
+    }
+  }, []);
+
+  const handleCreateRoom = async () => {
+    if (!nickname.trim()) { setRoomError('Enter your name first'); return; }
+    setRoomLoading(true);
+    setRoomError('');
+    try {
+      const code = await createRoom(nickname.trim());
+      setActiveRoom(code);
+      setActiveNick(nickname.trim());
+      setRoomCode(code);
+      // Pull any existing overlays and apply
+      const overlays = await pullAllOverlays();
+      for (const o of overlays) await applyOverlay(o);
+    } catch (e: any) {
+      setRoomError(e.message || 'Failed to create room');
+    }
+    setRoomLoading(false);
+  };
+
+  const handleJoinRoom = async () => {
+    if (!nickname.trim()) { setRoomError('Enter your name first'); return; }
+    if (!roomCode.trim() || roomCode.trim().length !== 6) { setRoomError('Enter a 6-digit room code'); return; }
+    setRoomLoading(true);
+    setRoomError('');
+    try {
+      await joinRoom(roomCode.trim(), nickname.trim());
+      setActiveRoom(roomCode.trim());
+      setActiveNick(nickname.trim());
+      // Pull all overlays and apply to local DB
+      const overlays = await pullAllOverlays();
+      for (const o of overlays) await applyOverlay(o);
+    } catch (e: any) {
+      setRoomError(e.message || 'Room not found or expired');
+    }
+    setRoomLoading(false);
+  };
+
+  const handleLeaveRoom = async () => {
+    await leaveRoom();
+    setActiveRoom(null);
+    setConnected(false);
+    setBuddies([]);
+    setActivityLog([]);
+  };
+
+  const copyRoomCode = () => {
+    if (activeRoom) {
+      navigator.clipboard.writeText(activeRoom);
+      setCodeCopied(true);
+      setTimeout(() => setCodeCopied(false), 1500);
+    }
+  };
 
   const update = (partial: Partial<AppSettings>) => {
     const merged = saveSettings(partial);
@@ -51,6 +148,153 @@ export default function SettingsScreen({ onBack }: SettingsScreenProps) {
       </div>
 
       <div className="px-4 py-4 space-y-6">
+
+        {/* Buddy Room */}
+        {isSupabaseConfigured() && (
+        <section>
+          <div className="flex items-center gap-2 mb-3">
+            <Users size={16} className="text-electric" />
+            <h2 className="text-sm font-semibold text-zinc-300 uppercase tracking-wider">Buddy Room</h2>
+            {connected && (
+              <span className="ml-auto flex items-center gap-1.5 text-xs text-status-success">
+                <span className="w-2 h-2 rounded-full bg-status-success animate-pulse" />
+                Connected
+              </span>
+            )}
+          </div>
+          <div className="card divide-y divide-surface-500/30">
+            {activeRoom ? (
+              <>
+                {/* Connected view */}
+                <div className="p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <div className="text-xs text-zinc-500 uppercase tracking-wider">Room Code</div>
+                      <div className="text-2xl font-bold text-electric tracking-widest font-mono">{activeRoom}</div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={copyRoomCode}
+                        className="p-2.5 rounded-xl bg-surface-700 border border-surface-500/30 text-zinc-400 active:text-electric"
+                      >
+                        {codeCopied ? <Check size={16} className="text-status-success" /> : <Copy size={16} />}
+                      </button>
+                      <button
+                        onClick={handleLeaveRoom}
+                        className="p-2.5 rounded-xl bg-surface-700 border border-status-danger/30 text-status-danger active:bg-status-danger/10"
+                      >
+                        <LogOut size={16} />
+                      </button>
+                    </div>
+                  </div>
+                  <div className="text-xs text-zinc-500">You: <span className="text-zinc-300">{activeNick}</span></div>
+                </div>
+
+                {/* Presence */}
+                <div className="p-4">
+                  <div className="text-xs text-zinc-500 uppercase tracking-wider mb-2">
+                    Buddies Online ({buddies.length})
+                  </div>
+                  {buddies.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {buddies.map((name) => (
+                        <span
+                          key={name}
+                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ${
+                            name === activeNick
+                              ? 'bg-electric/10 text-electric border border-electric/30'
+                              : 'bg-surface-600 text-zinc-300 border border-surface-500/30'
+                          }`}
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full bg-status-success" />
+                          {name}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-zinc-600">Waiting for buddies to join...</p>
+                  )}
+                </div>
+
+                {/* Activity Feed */}
+                {activityLog.length > 0 && (
+                  <div className="p-4">
+                    <div className="text-xs text-zinc-500 uppercase tracking-wider mb-2">Recent Activity</div>
+                    <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                      {activityLog.map((entry, i) => (
+                        <div key={i} className="text-xs text-zinc-400">
+                          <span className="text-zinc-300 font-medium">{entry.user_name}</span>
+                          {' '}changed{' '}
+                          <span className="text-electric">{entry.field}</span>
+                          {' '}on #{entry.item_number}
+                          {entry.new_value && (
+                            <span className="text-zinc-500"> → {entry.new_value}</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                {/* Join/Create view */}
+                <div className="p-4 space-y-3">
+                  <div>
+                    <label className="text-sm text-zinc-300 font-medium">Your Name</label>
+                    <input
+                      type="text"
+                      value={nickname}
+                      onChange={(e) => setNickname(e.target.value)}
+                      placeholder="e.g. Joey, Scotty"
+                      maxLength={20}
+                      className="mt-1.5 w-full bg-surface-700 border border-surface-500/30 rounded-xl px-3 py-2.5 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-electric/50"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm text-zinc-300 font-medium">Room Code</label>
+                    <input
+                      type="text"
+                      value={roomCode}
+                      onChange={(e) => setRoomCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                      placeholder="6-digit code"
+                      maxLength={6}
+                      inputMode="numeric"
+                      className="mt-1.5 w-full bg-surface-700 border border-surface-500/30 rounded-xl px-3 py-2.5 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-electric/50 font-mono tracking-widest text-center text-lg"
+                    />
+                  </div>
+                  {roomError && (
+                    <p className="text-xs text-status-danger">{roomError}</p>
+                  )}
+                </div>
+                <div className="p-4 grid grid-cols-2 gap-2">
+                  <button
+                    onClick={handleJoinRoom}
+                    disabled={roomLoading}
+                    className="py-2.5 px-3 rounded-xl text-sm font-medium bg-electric/10 border border-electric/40 text-electric active:bg-electric/20 disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {roomLoading ? <Loader2 size={14} className="animate-spin" /> : <Users size={14} />}
+                    Join Room
+                  </button>
+                  <button
+                    onClick={handleCreateRoom}
+                    disabled={roomLoading}
+                    className="py-2.5 px-3 rounded-xl text-sm font-medium bg-surface-700 border border-surface-500/30 text-zinc-300 active:bg-surface-600 disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {roomLoading ? <Loader2 size={14} className="animate-spin" /> : null}
+                    New Room
+                  </button>
+                </div>
+                <div className="px-4 pb-4">
+                  <p className="text-xs text-zinc-600">
+                    Create a room and share the code with your auction buddies. Everyone sees live status changes, notes, and max bids. Rooms expire after 24 hours.
+                  </p>
+                </div>
+              </>
+            )}
+          </div>
+        </section>
+        )}
 
         {/* Sync Mode */}
         <section>
