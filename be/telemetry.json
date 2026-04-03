@@ -245,5 +245,18 @@
     "tokens": null,
     "cost_usd": null,
     "commit": null
+  },
+  {
+    "triple": "{search settings + sync, shipped from, bid-buddy}",
+    "command": "~s",
+    "description": "Ship — search settings + real-time sync, Boards 3-5, 19 commits, 46 pts",
+    "project": "bid-buddy",
+    "repo": "LBKdotdev/bid-buddy",
+    "date": "2026-04-03",
+    "time": "00:55",
+    "duration_sec": 120,
+    "tokens": null,
+    "cost_usd": null,
+    "commit": null
   }
 ]

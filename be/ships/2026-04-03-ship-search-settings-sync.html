@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ship — Search Settings + Real-time Sync</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #111111; color: #e0e0e0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 1.6; }
+  nav { position: sticky; top: 0; background: #000; border-bottom: 2px solid #6FC3DF; padding: 12px 24px; z-index: 100; display: flex; align-items: center; gap: 16px; }
+  nav .brand { color: #6FC3DF; font-weight: 700; font-size: 18px; }
+  nav .title { color: #999; font-size: 14px; }
+  .container { max-width: 800px; margin: 0 auto; padding: 24px 16px; }
+  h1 { color: #6FC3DF; font-size: 28px; margin-bottom: 8px; }
+  h2 { color: #6FC3DF; font-size: 20px; margin: 32px 0 12px; border-bottom: 1px solid #333; padding-bottom: 8px; }
+  .section { background: #1A1A1A; border-radius: 8px; padding: 20px; margin: 16px 0; }
+  ul { margin: 8px 0 8px 24px; }
+  li { margin: 4px 0; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid #333; }
+  th { color: #6FC3DF; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; }
+  td { color: #ccc; font-size: 14px; }
+  .stat { text-align: center; padding: 16px; }
+  .stat .big { font-size: 48px; font-weight: 700; color: #6FC3DF; }
+  .stat .label { color: #888; font-size: 14px; margin-top: 4px; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .highlight { background: #0f2d1a; border: 1px solid #22c55e33; border-radius: 8px; padding: 16px; margin: 16px 0; }
+  code { background: #222; padding: 2px 6px; border-radius: 4px; font-size: 13px; color: #6FC3DF; }
+  footer { text-align: center; color: #555; font-size: 12px; margin-top: 48px; padding: 24px; border-top: 1px solid #222; }
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="brand">Be</span>
+  <span class="title">Ship</span>
+</nav>
+
+<div class="container">
+  <h1>Ship: Search Settings + Real-time Sync</h1>
+  <p style="color:#999;">Boards 3-5 — 19 commits, 46 pts, 12/12 tests pass</p>
+
+  <div class="grid">
+    <div class="stat">
+      <div class="big">19</div>
+      <div class="label">Commits</div>
+    </div>
+    <div class="stat">
+      <div class="big">46</div>
+      <div class="label">Points</div>
+    </div>
+    <div class="stat">
+      <div class="big">12</div>
+      <div class="label">Tests Pass</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>What Shipped</h2>
+    <table>
+      <tr><th>Board</th><th>Scope</th><th>Pts</th><th>Items</th></tr>
+      <tr><td>3</td><td>Search Settings + Supabase Setup</td><td>16</td><td>4</td></tr>
+      <tr><td>4</td><td>Real-time Sync Engine</td><td>15</td><td>3</td></tr>
+      <tr><td>5</td><td>Sync UX + Offline</td><td>15</td><td>3</td></tr>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>Features</h2>
+    <ul>
+      <li><strong>Buddy Room</strong> — Create or join a 6-digit room. Share item status, notes, max bids live with up to 3 auction buddies. Rooms auto-expire after 24 hours.</li>
+      <li><strong>Real-time Sync</strong> — Changes appear instantly on all connected phones via Supabase postgres_changes. Presence tracking shows who's online with green dots.</li>
+      <li><strong>Shared Comps</strong> — When one buddy searches for comps, results are cached in Supabase. Other buddies skip the Apify call and use the shared result — saves ~$0.03/search.</li>
+      <li><strong>Offline Queue</strong> — Edits made without signal are queued in localStorage. Automatically flushed when connection returns.</li>
+      <li><strong>Activity Feed</strong> — Live feed in Settings showing who changed what on which item.</li>
+      <li><strong>Sync Status Dot</strong> — Floating green pill in top-right of all screens. Shows room code, tapping opens Settings.</li>
+      <li><strong>Search Radius</strong> — Configurable 50-300mi radius for comp searches.</li>
+      <li><strong>Region Picker</strong> — 7 regions: SoCal, NorCal, Phoenix, Vegas, Dallas, Houston, Orlando. Multi-select, expands Craigslist + Facebook coverage.</li>
+      <li><strong>Results per Source</strong> — 5-50 slider controls how many listings to pull from each source.</li>
+      <li><strong>Apify Usage Gauge</strong> — Cost tracking with color-coded gauge bar and monthly budget slider.</li>
+      <li><strong>NPA Code Stripping</strong> — Internal manufacturer codes (KRT800GJF) stripped from comp queries, preventing wasted Apify searches.</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>New Files</h2>
+    <table>
+      <tr><th>File</th><th>Purpose</th></tr>
+      <tr><td><code>src/services/syncClient.ts</code></td><td>Room system, real-time subscription, presence, push/pull overlays, offline queue</td></tr>
+      <tr><td><code>src/lib/supabase.ts</code></td><td>Supabase client init (null-safe when unconfigured)</td></tr>
+      <tr><td><code>src/utils/queryClean.ts</code></td><td>NPA internal code regex + cleanNpaModel()</td></tr>
+      <tr><td><code>src/utils/apifyUsage.ts</code></td><td>localStorage-based Apify cost tracker</td></tr>
+      <tr><td><code>supabase/schema.sql</code></td><td>4 tables: rooms, item_overlays, shared_comps, activity</td></tr>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>Modified Files</h2>
+    <table>
+      <tr><th>File</th><th>Changes</th></tr>
+      <tr><td><code>src/App.tsx</code></td><td>Wires autoRejoin, overlay listener, sync dot</td></tr>
+      <tr><td><code>src/utils/db.ts</code></td><td>saveItem diffs + pushOverlay, applyOverlay for remote changes</td></tr>
+      <tr><td><code>src/services/multiSourceComps.ts</code></td><td>Shared comps cache via Supabase, Apify logging</td></tr>
+      <tr><td><code>src/screens/SettingsScreen.tsx</code></td><td>Buddy Room UI, search settings, Apify gauge</td></tr>
+      <tr><td><code>src/screens/ItemDetailScreen.tsx</code></td><td>cleanNpaModel on queries, oldItem diff for sync</td></tr>
+      <tr><td><code>src/utils/settings.ts</code></td><td>searchRadius, searchRegions, resultsPerSource</td></tr>
+      <tr><td><code>api/fetch-comps.js</code></td><td>7-region map, maxResults passthrough</td></tr>
+      <tr><td><code>CLAUDE.md</code></td><td>Supabase section updated from "In Progress" to shipped</td></tr>
+    </table>
+  </div>
+
+  <div class="highlight">
+    <h2 style="margin-top:0;border:none;padding:0;">Deploy Note</h2>
+    <p>Vercel auto-deploys on push to main. Supabase env vars (<code>VITE_SUPABASE_URL</code> + <code>VITE_SUPABASE_ANON_KEY</code>) are already set in Vercel project settings. First deploy with sync will need the Supabase project running (resumed Apr 3).</p>
+  </div>
+
+  <div class="section">
+    <h2>Commit Log (19 commits)</h2>
+    <table>
+      <tr><th>Hash</th><th>Message</th></tr>
+      <tr><td><code>0a0b17b</code></td><td>~t: Boards 3-5 sync test — 12 checks, all pass</td></tr>
+      <tr><td><code>8d19fa9</code></td><td>~b: Board 5 build report + telemetry + index</td></tr>
+      <tr><td><code>aebca01</code></td><td>~a: sync status dot in App + Board 5 complete</td></tr>
+      <tr><td><code>1607e70</code></td><td>~a: room create/join UI + presence display + activity feed</td></tr>
+      <tr><td><code>4d17de2</code></td><td>~b: Board 4 build report + telemetry + index</td></tr>
+      <tr><td><code>dd6d0af</code></td><td>~b: Board 4 complete — shared comps + real-time sync</td></tr>
+      <tr><td><code>fb9b577</code></td><td>~b: real-time overlay subscription + upsert on save</td></tr>
+      <tr><td><code>9c3bfa7</code></td><td>~a: syncClient — rooms, real-time, presence, offline queue</td></tr>
+      <tr><td><code>f99711d</code></td><td>~b: Board 3 complete — search settings + Supabase</td></tr>
+      <tr><td><code>fe8172b</code></td><td>~u: search params passthrough to fetch-comps API</td></tr>
+      <tr><td><code>075c493</code></td><td>~a: search radius, region picker, results-per-source</td></tr>
+      <tr><td><code>961263a</code></td><td>doc: Supabase shared state section in CLAUDE.md</td></tr>
+      <tr><td><code>d26970c</code></td><td>~p ~e: Supabase shared state — 3 boards, 46 pts</td></tr>
+      <tr><td><code>1b9b440</code></td><td>~e: 3 boards, 12 items, 49 pts (D1 version)</td></tr>
+      <tr><td><code>45d1f58</code></td><td>~p: shared state + search settings</td></tr>
+      <tr><td><code>63c976b</code></td><td>strip NPA codes from comp queries + Apify gauge</td></tr>
+      <tr><td><code>0d84421</code></td><td>~f: skip /api/ routes in service worker</td></tr>
+      <tr><td><code>25ac932</code></td><td>~u: single Import NPA Catalog PDF button</td></tr>
+      <tr><td><code>dcc58e9</code></td><td>~r: retro PDF import overhaul</td></tr>
+    </table>
+  </div>
+</div>
+
+<footer>Generated 2026-04-03 00:55</footer>
+</body>
+</html>

@@ -39,6 +39,8 @@ No router library — `App.tsx` manages all navigation state directly. Four bott
 | `src/services/aiEstimate.ts` | AI pricing via Gemini with heuristic fallback. Base prices for 50+ make/model combos, depreciation/mileage adjustments. Model-specific caps (Ryker 600: $4,200, Ryker 900: $5,000) |
 | `src/services/multiSourceComps.ts` | Aggregates comps from eBay, CycleTrader, Craigslist, RVTrader via Vercel serverless. LocalStorage cache with 30-min expiry |
 | `src/services/ebayApi.ts` | Legacy eBay HTML scraper via CORS proxies. Fallback path |
+| `src/services/syncClient.ts` | Room-based real-time sync via Supabase. Create/join rooms, push/pull overlays, presence, offline queue |
+| `src/lib/supabase.ts` | Supabase client init. Null-safe — exports null when env vars missing |
 
 ### Screens
 
@@ -84,15 +86,18 @@ Dark motorsport theme defined in `tailwind.config.js`:
 2. **fetch-comps.js** — Multi-source comps aggregator (eBay + Apify CL/FB)
 3. **scan-tag.js** — OCR via Groq Vision API
 
-## Supabase (Shared State — In Progress)
+## Supabase (Shared State)
 
-Scotty's existing Supabase project "LBKdotdev's Project" is being used for multi-user real-time sync. Previously it only hosted edge function CORS proxies (removed in Board 2). Now being used properly as a database.
+Room-based real-time sync via Supabase. 3 people at the auction floor can share item status, notes, max bids, and comps results live.
 
-- **Project:** LBKdotdev's Project (paused Mar 28, resumed Apr 3 2026)
-- **Purpose:** Room-based real-time sync — status, maxBid, notes, buddyTag shared across devices
-- **Tables:** rooms, item_overlays, shared_comps, activity (schema in Board 3)
-- **Free tier:** 500MB DB, 50K users, real-time included
-- **Env vars needed:** `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY` in `.env.local` and Vercel dashboard
+- **Project:** LBKdotdev's Project (resumed Apr 3 2026)
+- **Tables:** rooms, item_overlays, shared_comps, activity
+- **Sync fields:** status, maxBid, note, buddyTag (overlay-only — heavy data stays in IndexedDB)
+- **Room system:** 6-digit codes, 24-hour expiry, presence tracking, activity feed
+- **Offline queue:** Edits made without signal are queued in localStorage, flushed on reconnect
+- **Shared comps:** Before calling Apify, checks if a buddy already fetched comps for the same query — saves ~$0.03/search
+- **UI:** Buddy Room section in Settings (create/join/leave, presence list, activity feed), floating sync dot in App header
+- **Env vars:** `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY` in `.env.local` and Vercel dashboard
 
 ## Environment Variables
 
