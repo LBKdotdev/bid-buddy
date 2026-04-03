@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estimate — PDF Import Overhaul</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #111111; color: #e0e0e0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 1.6; }
+  nav { position: sticky; top: 0; background: #000; border-bottom: 2px solid #6FC3DF; padding: 12px 24px; z-index: 100; display: flex; align-items: center; gap: 16px; }
+  nav .brand { color: #6FC3DF; font-weight: 700; font-size: 18px; }
+  nav .title { color: #999; font-size: 14px; }
+  .container { max-width: 800px; margin: 0 auto; padding: 24px 16px; }
+  h1 { color: #6FC3DF; font-size: 28px; margin-bottom: 8px; }
+  h2 { color: #6FC3DF; font-size: 20px; margin: 32px 0 12px; border-bottom: 1px solid #333; padding-bottom: 8px; }
+  .section { background: #1A1A1A; border-radius: 8px; padding: 20px; margin: 16px 0; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+  th { text-align: left; color: #6FC3DF; border-bottom: 1px solid #333; padding: 8px; font-size: 13px; }
+  td { padding: 8px; border-bottom: 1px solid #222; font-size: 13px; }
+  .pts { color: #6FC3DF; font-weight: 700; text-align: center; }
+  .total { color: #4ade80; font-weight: 700; }
+  .cmd { color: #6FC3DF; }
+  footer { text-align: center; color: #555; font-size: 12px; margin-top: 48px; padding: 24px; border-top: 1px solid #222; }
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="brand">Be</span>
+  <span class="title">Estimate — PDF Import Overhaul</span>
+</nav>
+
+<div class="container">
+  <h1>PDF Import Overhaul</h1>
+  <p style="color:#999; margin-bottom:24px;">Source: plan-pdf-import-overhaul.html</p>
+
+  <div class="section">
+    <h2>Board 2 — PDF Import Overhaul (19 pts)</h2>
+    <table>
+      <tr><th>Item</th><th>Pts</th><th>Cmd</th></tr>
+      <tr><td>{color + zone + bookValue + conditionDetail fields, add to, InventoryItem type}</td><td class="pts">3</td><td class="cmd">~a</td></tr>
+      <tr><td>{auto-detect catalog type from filename + full field extraction, update in, pdfParser.ts}</td><td class="pts">5</td><td class="cmd">~u</td></tr>
+      <tr><td>{RVM block parser with all structured fields, update in, pdfParser.ts}</td><td class="pts">5</td><td class="cmd">~u</td></tr>
+      <tr><td>{supabase/ folder + SDK dep + stale CLAUDE.md refs, remove from, bid-buddy}</td><td class="pts">3</td><td class="cmd">~d</td></tr>
+      <tr><td>{PDF import with real NPA catalogs, test across, motorcycle + RVM}</td><td class="pts">3</td><td class="cmd">~t</td></tr>
+      <tr><td colspan="3"></td></tr>
+      <tr><td class="total">Total</td><td class="pts total">19</td><td></td></tr>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>Value Rationale</h2>
+    <ul style="margin: 8px 0 0 24px;">
+      <li><strong>Data model first</strong> — new fields must exist before parsers can populate them</li>
+      <li><strong>Motorcycle parser second</strong> — already mostly works, just needs field capture upgrades + auto-detect wiring</li>
+      <li><strong>RVM parser third</strong> — biggest rewrite, depends on new fields being in place</li>
+      <li><strong>Supabase cleanup fourth</strong> — dead weight removal, safe to do after parsers are solid</li>
+      <li><strong>Test last</strong> — validate everything against real NPA PDFs end-to-end</li>
+    </ul>
+  </div>
+
+</div>
+
+<footer>Generated 2026-04-02 23:48</footer>
+
+</body>
+</html>

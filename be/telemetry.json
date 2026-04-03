@@ -76,5 +76,18 @@
     "tokens": null,
     "cost_usd": null,
     "commit": null
+  },
+  {
+    "triple": "{PDF import overhaul, estimated for, bid-buddy}",
+    "command": "~e",
+    "description": "Estimate — 1 board, 5 items, 19 pts",
+    "project": "bid-buddy",
+    "repo": "LBKdotdev/bid-buddy",
+    "date": "2026-04-02",
+    "time": "23:48",
+    "duration_sec": 60,
+    "tokens": null,
+    "cost_usd": null,
+    "commit": null
   }
 ]
