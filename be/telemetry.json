@@ -153,6 +153,19 @@
     "duration_sec": 300,
     "tokens": null,
     "cost_usd": null,
+    "commit": "45d1f58"
+  },
+  {
+    "triple": "{shared state + search settings estimate, estimated for, bid-buddy}",
+    "command": "~e",
+    "description": "Estimate — 3 boards, 12 items, 49 pts (search settings, D1 sync, room UI)",
+    "project": "bid-buddy",
+    "repo": "LBKdotdev/bid-buddy",
+    "date": "2026-04-02",
+    "time": "23:55",
+    "duration_sec": 180,
+    "tokens": null,
+    "cost_usd": null,
     "commit": null
   }
 ]
