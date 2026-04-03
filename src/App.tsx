@@ -10,8 +10,9 @@ import BuyFeeCalculatorScreen from './screens/BuyFeeCalculatorScreen';
 import CompsScreen from './screens/CompsScreen';
 import AllListingsScreen from './screens/AllListingsScreen';
 import SettingsScreen from './screens/SettingsScreen';
-import { initDB, getAllItems } from './utils/db';
-import demoListings from './data/demoListings.json';
+import { initDB, getAllItems, applyOverlay } from './utils/db';
+import { autoRejoin, onOverlayChanged, onConnectionStatus } from './services/syncClient';
+
 
 // Clear old comps cache versions on startup
 function clearOldCompsCache() {
@@ -78,6 +79,19 @@ function App() {
 
       // Load counts from IndexedDB
       await refreshCounts();
+
+      // Wire up real-time sync
+      onOverlayChanged(async (overlay) => {
+        const updated = await applyOverlay(overlay);
+        if (updated) refreshCounts();
+      });
+
+      onConnectionStatus((connected) => {
+        console.log('Sync status:', connected ? 'connected' : 'disconnected');
+      });
+
+      // Auto-rejoin room if previously connected
+      await autoRejoin();
     };
 
     init();

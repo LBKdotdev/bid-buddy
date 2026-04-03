@@ -244,7 +244,7 @@ export default function ItemDetailScreen({ itemId, onClose }: ItemDetailScreenPr
         updatedAt: Date.now(),
       };
 
-      await saveItem(updated);
+      await saveItem(updated, item);
       setItem(updated);
       onClose();
     } catch (error) {

@@ -1,4 +1,5 @@
 import type { InventoryItem, Category } from '../types/inventory';
+import { isInRoom, pushOverlay, type ItemOverlay } from '../services/syncClient';
 
 const DB_NAME = 'lbk-bid-buddy';
 const DB_VERSION = 1;
@@ -32,9 +33,9 @@ export async function initDB(): Promise<IDBDatabase> {
   });
 }
 
-export async function saveItem(item: InventoryItem): Promise<void> {
+export async function saveItem(item: InventoryItem, oldItem?: InventoryItem | null): Promise<void> {
   const database = await initDB();
-  return new Promise((resolve, reject) => {
+  await new Promise<void>((resolve, reject) => {
     const transaction = database.transaction([STORE_NAME], 'readwrite');
     const store = transaction.objectStore(STORE_NAME);
     const request = store.put(item);
@@ -42,6 +43,53 @@ export async function saveItem(item: InventoryItem): Promise<void> {
     request.onsuccess = () => resolve();
     request.onerror = () => reject(request.error);
   });
+
+  // Push overlay to Supabase if in a room and syncable fields changed
+  if (isInRoom() && item.itemNumber) {
+    const fields: any = {};
+    let changed = false;
+
+    if (!oldItem || item.status !== oldItem.status) { fields.status = item.status; changed = true; }
+    if (!oldItem || item.maxBid !== oldItem.maxBid) { fields.max_bid = item.maxBid; changed = true; }
+    if (!oldItem || item.note !== oldItem.note) { fields.note = item.note; changed = true; }
+    if (!oldItem || item.buddyTag !== oldItem.buddyTag) { fields.buddy_tag = item.buddyTag; changed = true; }
+
+    if (changed) {
+      pushOverlay(item.itemNumber, fields, oldItem ? {
+        status: oldItem.status,
+        max_bid: oldItem.maxBid,
+        note: oldItem.note,
+      } : undefined).catch(e => console.error('Sync push failed:', e));
+    }
+  }
+}
+
+/** Apply a remote overlay to a local item. Returns true if item was updated. */
+export async function applyOverlay(overlay: ItemOverlay): Promise<boolean> {
+  // Find item by itemNumber
+  const items = await getAllItems();
+  const item = items.find(i => i.itemNumber === overlay.item_number);
+  if (!item) return false;
+
+  let changed = false;
+  if (overlay.status && overlay.status !== item.status) { item.status = overlay.status as any; changed = true; }
+  if (overlay.max_bid !== undefined && overlay.max_bid !== item.maxBid) { item.maxBid = overlay.max_bid; changed = true; }
+  if (overlay.note !== undefined && overlay.note !== item.note) { item.note = overlay.note; changed = true; }
+  if (overlay.buddy_tag !== undefined && overlay.buddy_tag !== item.buddyTag) { item.buddyTag = overlay.buddy_tag; changed = true; }
+
+  if (changed) {
+    item.updatedAt = Date.now();
+    const database = await initDB();
+    await new Promise<void>((resolve, reject) => {
+      const transaction = database.transaction([STORE_NAME], 'readwrite');
+      const store = transaction.objectStore(STORE_NAME);
+      const request = store.put(item);
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  return changed;
 }
 
 export async function saveItems(items: InventoryItem[]): Promise<void> {
