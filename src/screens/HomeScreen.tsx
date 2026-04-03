@@ -228,6 +228,10 @@ export default function HomeScreen({
           maxBid: existingItem?.maxBid || null,
           buddyTag: existingItem?.buddyTag || null,
           updatedAt: Date.now(),
+          color: parsed.color || existingItem?.color || null,
+          zone: parsed.zone || existingItem?.zone || null,
+          bookValue: parsed.bookValue || existingItem?.bookValue || null,
+          conditionDetail: parsed.conditionDetail || existingItem?.conditionDetail || null,
           cachedEstimate: existingItem?.cachedEstimate,
           cachedComps: existingItem?.cachedComps,
         };

@@ -156,6 +156,10 @@ Return ONLY valid JSON, nothing else. Example: {"itemNumber":"8026","year":2024,
         maxBid: null,
         buddyTag: null,
         updatedAt: Date.now(),
+        color: null,
+        zone: null,
+        bookValue: null,
+        conditionDetail: null,
       };
 
       await saveItem(newItem);

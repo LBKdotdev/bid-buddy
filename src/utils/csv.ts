@@ -182,5 +182,9 @@ export function csvRowToInventoryItem(
     maxBid: existingItem?.maxBid || null,
     buddyTag: existingItem?.buddyTag || null,
     updatedAt: Date.now(),
+    color: existingItem?.color || null,
+    zone: existingItem?.zone || null,
+    bookValue: existingItem?.bookValue || null,
+    conditionDetail: existingItem?.conditionDetail || null,
   };
 }

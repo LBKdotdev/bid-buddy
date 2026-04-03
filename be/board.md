@@ -18,7 +18,6 @@
 Source: plan-pdf-import-overhaul.html → estimate-pdf-import-overhaul.html
 
 ### Ready
-- {color + zone + bookValue + conditionDetail fields, add to, InventoryItem type} · 3 pts · ~a
 - {auto-detect catalog type from filename + full field extraction, update in, pdfParser.ts} · 5 pts · ~u
 - {RVM block parser with all structured fields, update in, pdfParser.ts} · 5 pts · ~u
 - {supabase/ folder + SDK dep + stale CLAUDE.md refs, remove from, bid-buddy} · 3 pts · ~d
@@ -27,3 +26,4 @@ Source: plan-pdf-import-overhaul.html → estimate-pdf-import-overhaul.html
 ### In Progress
 
 ### Done
+- {color + zone + bookValue + conditionDetail fields, add to, InventoryItem type} · 3 pts · ~a ✅

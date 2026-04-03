@@ -62,6 +62,10 @@ export interface InventoryItem {
   maxBid: number | null;
   buddyTag: string | null;
   updatedAt: number;
+  color: string | null;
+  zone: string | null;
+  bookValue: number | null;
+  conditionDetail: string | null;
   cachedEstimate?: CachedEstimate;
   cachedComps?: CachedComps;
   cachedIssues?: CachedIssues;
