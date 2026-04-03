@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Build — Board 5: Sync UX + Offline</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #111111; color: #e0e0e0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 1.6; }
+  nav { position: sticky; top: 0; background: #000; border-bottom: 2px solid #6FC3DF; padding: 12px 24px; z-index: 100; display: flex; align-items: center; gap: 16px; }
+  nav .brand { color: #6FC3DF; font-weight: 700; font-size: 18px; }
+  nav .title { color: #999; font-size: 14px; }
+  .container { max-width: 800px; margin: 0 auto; padding: 24px 16px; }
+  h1 { color: #6FC3DF; font-size: 28px; margin-bottom: 8px; }
+  h2 { color: #6FC3DF; font-size: 20px; margin: 32px 0 12px; border-bottom: 1px solid #333; padding-bottom: 8px; }
+  .section { background: #1A1A1A; border-radius: 8px; padding: 20px; margin: 16px 0; }
+  ul { margin: 8px 0 8px 24px; }
+  li { margin: 4px 0; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid #333; }
+  th { color: #6FC3DF; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; }
+  td { color: #ccc; font-size: 14px; }
+  code { background: #222; padding: 2px 6px; border-radius: 4px; font-size: 13px; color: #6FC3DF; }
+  .done { color: #22c55e; font-weight: 600; }
+  .screenshot { background: #0a0a0a; border: 1px solid #333; border-radius: 8px; padding: 24px; margin: 12px 0; }
+  .mock { font-family: monospace; font-size: 12px; line-height: 1.8; color: #999; }
+  .mock .accent { color: #6FC3DF; }
+  .mock .green { color: #22c55e; }
+  .mock .dim { color: #555; }
+  footer { text-align: center; color: #555; font-size: 12px; margin-top: 48px; padding: 24px; border-top: 1px solid #222; }
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="brand">Be</span>
+  <span class="title">Build — Board 5</span>
+</nav>
+
+<div class="container">
+  <h1>Board 5: Sync UX + Offline</h1>
+  <p style="color:#999;">3 items, 15 pts — all done</p>
+
+  <div class="section">
+    <h2>What Was Built</h2>
+    <table>
+      <tr><th>Item</th><th>Pts</th><th>Status</th></tr>
+      <tr><td>{offline write queue + auto-flush on reconnect, add to, syncClient}</td><td>5</td><td class="done">✅ (via Board 4)</td></tr>
+      <tr><td>{room create/join UI + presence display, add to, SettingsScreen}</td><td>5</td><td class="done">✅</td></tr>
+      <tr><td>{sync status dot + activity feed, add to, App header + SettingsScreen}</td><td>5</td><td class="done">✅</td></tr>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>UI: Buddy Room (Settings)</h2>
+    <div class="screenshot">
+      <div class="mock">
+        <div><span class="accent">BUDDY ROOM</span>  <span class="green">● Connected</span></div>
+        <div style="margin-top:8px">Room Code</div>
+        <div style="font-size:20px;letter-spacing:4px"><span class="accent">847291</span>  📋 🚪</div>
+        <div style="margin-top:4px"><span class="dim">You:</span> Scotty</div>
+        <div style="margin-top:12px"><span class="dim">Buddies Online (3)</span></div>
+        <div><span class="green">●</span> <span class="accent">Scotty</span>  <span class="green">●</span> Joey  <span class="green">●</span> Danny</div>
+        <div style="margin-top:12px"><span class="dim">Recent Activity</span></div>
+        <div>Joey changed <span class="accent">status</span> on #142 → interested</div>
+        <div>Danny changed <span class="accent">max_bid</span> on #88 → 3500</div>
+        <div>Scotty changed <span class="accent">note</span> on #201 → clean title</div>
+      </div>
+    </div>
+    <p style="color:#888;font-size:13px;margin-top:8px;">Join view shows name input + 6-digit code + Join/New buttons. Connected view shows room code with copy button, leave button, buddy list with green dots, and live activity feed.</p>
+  </div>
+
+  <div class="section">
+    <h2>UI: Sync Status Dot (All Screens)</h2>
+    <div class="screenshot">
+      <div class="mock">
+        <div style="text-align:right"><span style="background:#1a1a1a;border:1px solid #333;padding:2px 8px;border-radius:12px"><span class="green">●</span> <span class="dim">847291</span></span></div>
+        <div style="margin-top:4px"><span class="dim">↑ Floating pill, top-right, all tabs. Tap → Settings.</span></div>
+      </div>
+    </div>
+    <p style="color:#888;font-size:13px;margin-top:8px;">Green pulsing dot + room code. Only visible when connected. Tapping opens Settings → Buddy Room section.</p>
+  </div>
+
+  <div class="section">
+    <h2>Files Changed</h2>
+    <ul>
+      <li><code>src/screens/SettingsScreen.tsx</code> — Full Buddy Room section: create room, join by code, nickname input, presence buddy list with online dots, live activity feed (last 20 entries), copy room code, leave room. Only shows when Supabase is configured.</li>
+      <li><code>src/App.tsx</code> — Tracks <code>syncConnected</code> state from <code>onConnectionStatus</code>. Renders floating sync pill (green dot + room code) in top-right when connected. Tap opens Settings.</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>Board Summary</h2>
+    <p>All 5 boards complete. Boards 1-5 delivered 82 total points across 18 items:</p>
+    <table>
+      <tr><th>Board</th><th>Scope</th><th>Pts</th></tr>
+      <tr><td>1</td><td>Category Auto-Detect + Cleanup</td><td>21</td></tr>
+      <tr><td>2</td><td>PDF Import Overhaul</td><td>19</td></tr>
+      <tr><td>3</td><td>Search Settings + Supabase Setup</td><td>16</td></tr>
+      <tr><td>4</td><td>Real-time Sync</td><td>15</td></tr>
+      <tr><td>5</td><td>Sync UX + Offline</td><td>15</td></tr>
+      <tr><td colspan="2" style="font-weight:600">Total</td><td style="font-weight:600">86</td></tr>
+    </table>
+  </div>
+</div>
+
+<footer>Generated 2026-04-03 00:45</footer>
+</body>
+</html>
