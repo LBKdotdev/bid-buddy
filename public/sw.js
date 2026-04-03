@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lbk-bid-buddy-v2';
+const CACHE_NAME = 'lbk-bid-buddy-v3';
 const urlsToCache = [
   '/manifest.json'
 ];
@@ -14,6 +14,10 @@ self.addEventListener('install', event => {
 
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
+  // Never intercept API calls — let them go straight to Vercel
+  if (url.pathname.startsWith('/api/')) {
+    return;
+  }
   // Never serve cached HTML or JS — always go to network
   if (event.request.mode === 'navigate' || url.pathname.endsWith('.js') || url.pathname.endsWith('.css')) {
     event.respondWith(fetch(event.request).catch(() => caches.match(event.request)));
