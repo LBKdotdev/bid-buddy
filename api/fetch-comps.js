@@ -20,7 +20,7 @@ function withTimeout(promise, ms, fallback) {
 
 // eBay sold listings via HTML scraping (free)
 // Updated 2026-04: eBay switched from s-item to s-card classes
-async function fetchEbaySold(query) {
+async function fetchEbaySold(query, limit = 25) {
   const encodedQuery = encodeURIComponent(query);
   // _sacat=6024 = eBay Motors, _udlo=1000 = min $1000 (vehicles only, no parts)
   const url = `https://www.ebay.com/sch/i.html?_nkw=${encodedQuery}&LH_Complete=1&LH_Sold=1&_sop=13&_ipg=60&rt=nc&_sacat=6024&_udlo=1000`;
@@ -91,7 +91,7 @@ async function fetchEbaySold(query) {
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
-    }).slice(0, 25);
+    }).slice(0, limit);
   } catch (e) {
     console.error('eBay scrape error:', e);
     return [];
@@ -119,12 +119,12 @@ async function runApifyActor(actorId, input, timeoutSecs = 120) {
 }
 
 // Facebook Marketplace via Apify
-async function fetchFacebookMarketplace(query, city = 'fullerton', radius = 300) {
+async function fetchFacebookMarketplace(query, city = 'fullerton', radius = 150, limit = 15) {
   const searchUrl = `https://www.facebook.com/marketplace/${city}/search/?query=${encodeURIComponent(query)}&radius=${radius}`;
 
   const items = await runApifyActor('apify/facebook-marketplace-scraper', {
     startUrls: [{ url: searchUrl }],
-    resultsLimit: 15,
+    resultsLimit: limit,
     includeListingDetails: false,
   }, 90);
 
@@ -150,10 +150,11 @@ async function fetchFacebookMarketplace(query, city = 'fullerton', radius = 300)
 }
 
 // Craigslist via Apify
-async function fetchCraigslistApify(query, locations) {
+async function fetchCraigslistApify(query, locations, limit = 15) {
+  const perLocation = Math.max(5, Math.ceil(limit / locations.length));
   const promises = locations.map(async (loc) => {
     const items = await runApifyActor('fatihtahta/craigslist-scraper', {
-      queries: [query], locationCode: loc, category: 'sss', hasPic: true, limit: 10,
+      queries: [query], locationCode: loc, category: 'sss', hasPic: true, limit: perLocation,
     }, 60);
 
     const comps = [];
@@ -213,17 +214,44 @@ async function fetchCraigslistHtml(query, city) {
   return comps;
 }
 
-function getSearchLocation(zip) {
-  if (!zip) return { city: 'fullerton', craigslistLocations: ['orangecounty', 'inlandempire', 'sandiego'], fbRadius: 150 };
+// Region definitions — maps region key to CL locations + FB city
+const REGIONS = {
+  socal:   { city: 'fullerton',  cl: ['orangecounty', 'inlandempire', 'sandiego'] },
+  norcal:  { city: 'sacramento', cl: ['sfbay', 'sacramento', 'stockton'] },
+  phoenix: { city: 'phoenix',    cl: ['phoenix', 'tucson'] },
+  vegas:   { city: 'lasvegas',   cl: ['lasvegas'] },
+  dallas:  { city: 'dallas',     cl: ['dallas', 'fortworth', 'austin'] },
+  houston: { city: 'houston',    cl: ['houston', 'sanantonio', 'austin'] },
+  orlando: { city: 'orlando',    cl: ['orlando', 'tampa', 'jacksonville'] },
+};
+
+function getSearchLocation(zip, regions) {
+  // If explicit regions provided, merge them
+  if (regions && regions.length > 0) {
+    const clLocations = [];
+    let fbCity = 'fullerton';
+    for (const key of regions) {
+      const region = REGIONS[key];
+      if (region) {
+        clLocations.push(...region.cl);
+        fbCity = region.city; // use the last region's city for FB
+      }
+    }
+    // Dedupe CL locations
+    return { city: fbCity, craigslistLocations: [...new Set(clLocations)] };
+  }
+
+  // Fallback: auto-detect from zip
+  if (!zip) return { city: 'fullerton', craigslistLocations: ['orangecounty', 'inlandempire', 'sandiego'] };
   const num = parseInt(zip.substring(0, 3));
-  if (num >= 900 && num <= 928) return { city: 'fullerton', craigslistLocations: ['orangecounty', 'inlandempire', 'sandiego'], fbRadius: 150 };
-  if (num >= 930 && num <= 961) return { city: 'sacramento', craigslistLocations: ['sfbay', 'sacramento', 'stockton'], fbRadius: 150 };
-  if (num >= 850 && num <= 865) return { city: 'phoenix', craigslistLocations: ['phoenix', 'tucson', 'inlandempire'], fbRadius: 150 };
-  if (num >= 889 && num <= 898) return { city: 'lasvegas', craigslistLocations: ['lasvegas', 'phoenix', 'inlandempire'], fbRadius: 150 };
-  if (num >= 750 && num <= 769) return { city: 'dallas', craigslistLocations: ['dallas', 'fortworth', 'austin'], fbRadius: 150 };
-  if (num >= 770 && num <= 779) return { city: 'houston', craigslistLocations: ['houston', 'sanantonio', 'austin'], fbRadius: 150 };
-  if (num >= 320 && num <= 349) return { city: 'orlando', craigslistLocations: ['orlando', 'tampa', 'jacksonville'], fbRadius: 150 };
-  return { city: 'fullerton', craigslistLocations: ['orangecounty', 'inlandempire', 'sandiego'], fbRadius: 150 };
+  if (num >= 900 && num <= 928) return { city: 'fullerton', craigslistLocations: ['orangecounty', 'inlandempire', 'sandiego'] };
+  if (num >= 930 && num <= 961) return { city: 'sacramento', craigslistLocations: ['sfbay', 'sacramento', 'stockton'] };
+  if (num >= 850 && num <= 865) return { city: 'phoenix', craigslistLocations: ['phoenix', 'tucson', 'inlandempire'] };
+  if (num >= 889 && num <= 898) return { city: 'lasvegas', craigslistLocations: ['lasvegas', 'phoenix', 'inlandempire'] };
+  if (num >= 750 && num <= 769) return { city: 'dallas', craigslistLocations: ['dallas', 'fortworth', 'austin'] };
+  if (num >= 770 && num <= 779) return { city: 'houston', craigslistLocations: ['houston', 'sanantonio', 'austin'] };
+  if (num >= 320 && num <= 349) return { city: 'orlando', craigslistLocations: ['orlando', 'tampa', 'jacksonville'] };
+  return { city: 'fullerton', craigslistLocations: ['orangecounty', 'inlandempire', 'sandiego'] };
 }
 
 export default async function handler(req, res) {
@@ -236,25 +264,26 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
 
   try {
-    const { query, zip, radius, sources } = req.body;
+    const { query, zip, radius, sources, regions, maxResults } = req.body;
     if (!query) return res.status(400).json({ error: 'Query required' });
 
     const enabledSources = sources || ['ebay'];
-    const searchLocation = getSearchLocation(zip);
-    const searchRadius = radius || searchLocation.fbRadius;
+    const searchLocation = getSearchLocation(zip, regions);
+    const searchRadius = radius || 150;
+    const limit = maxResults || 15;
     const hasApify = !!APIFY_TOKEN;
 
     const fetches = [];
 
     if (enabledSources.includes('ebay')) {
-      fetches.push(withTimeout(fetchEbaySold(query), 30000, []).then(comps => ({ source: 'ebay', comps })));
+      fetches.push(withTimeout(fetchEbaySold(query, limit), 30000, []).then(comps => ({ source: 'ebay', comps })));
     }
     if (enabledSources.includes('facebook') && hasApify) {
-      fetches.push(withTimeout(fetchFacebookMarketplace(query, searchLocation.city, searchRadius), 50000, []).then(comps => ({ source: 'facebook', comps })));
+      fetches.push(withTimeout(fetchFacebookMarketplace(query, searchLocation.city, searchRadius, limit), 50000, []).then(comps => ({ source: 'facebook', comps })));
     }
     if (enabledSources.includes('craigslist')) {
       if (hasApify) {
-        fetches.push(withTimeout(fetchCraigslistApify(query, searchLocation.craigslistLocations), 50000, []).then(comps => ({ source: 'craigslist', comps })));
+        fetches.push(withTimeout(fetchCraigslistApify(query, searchLocation.craigslistLocations, limit), 50000, []).then(comps => ({ source: 'craigslist', comps })));
       } else {
         for (const loc of searchLocation.craigslistLocations) {
           fetches.push(withTimeout(fetchCraigslistHtml(query, loc), 15000, []).then(comps => ({ source: 'craigslist', comps })));

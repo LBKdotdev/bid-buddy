@@ -1,6 +1,7 @@
 // Multi-source comps aggregator - uses Vercel serverless functions
 // Sources: eBay Sold (free), Facebook Marketplace (Apify), Craigslist (Apify)
 import { logApifySearch } from '../utils/apifyUsage';
+import { getSettings } from '../utils/settings';
 
 export interface Comp {
   title: string;
@@ -35,7 +36,9 @@ export async function searchAllSources(
   radius?: number,
   enabledSources?: SourceKey[],
 ): Promise<MultiSourceResult> {
-  console.log('Fetching comps for:', query, 'zip:', zip, 'sources:', enabledSources);
+  const settings = getSettings();
+  const effectiveRadius = radius || settings.searchRadius;
+  console.log('Fetching comps for:', query, 'zip:', zip, 'radius:', effectiveRadius, 'sources:', enabledSources);
 
   try {
     const response = await fetch('/api/fetch-comps', {
@@ -46,8 +49,10 @@ export async function searchAllSources(
       body: JSON.stringify({
         query,
         zip,
-        radius,
+        radius: effectiveRadius,
         sources: enabledSources,
+        regions: settings.searchRegions,
+        maxResults: settings.resultsPerSource,
       }),
     });
 
