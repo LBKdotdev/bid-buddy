@@ -167,5 +167,31 @@
     "tokens": null,
     "cost_usd": null,
     "commit": null
+  },
+  {
+    "triple": "{shared state Supabase plan, planned for, bid-buddy}",
+    "command": "~p",
+    "description": "Plan shared state (Supabase) — supersedes D1 version, real-time sync built in",
+    "project": "bid-buddy",
+    "repo": "LBKdotdev/bid-buddy",
+    "date": "2026-04-03",
+    "time": "00:10",
+    "duration_sec": 180,
+    "tokens": null,
+    "cost_usd": null,
+    "commit": null
+  },
+  {
+    "triple": "{shared state Supabase estimate, estimated for, bid-buddy}",
+    "command": "~e",
+    "description": "Estimate — 3 boards, 11 items, 46 pts (Supabase real-time sync)",
+    "project": "bid-buddy",
+    "repo": "LBKdotdev/bid-buddy",
+    "date": "2026-04-03",
+    "time": "00:15",
+    "duration_sec": 120,
+    "tokens": null,
+    "cost_usd": null,
+    "commit": null
   }
 ]

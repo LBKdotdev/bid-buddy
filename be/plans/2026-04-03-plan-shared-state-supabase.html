@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plan — Shared State (Supabase) + Search Settings</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #111111; color: #e0e0e0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 1.6; }
+  nav { position: sticky; top: 0; background: #000; border-bottom: 2px solid #6FC3DF; padding: 12px 24px; z-index: 100; display: flex; align-items: center; gap: 16px; }
+  nav .brand { color: #6FC3DF; font-weight: 700; font-size: 18px; }
+  nav .title { color: #999; font-size: 14px; }
+  .container { max-width: 800px; margin: 0 auto; padding: 24px 16px; }
+  h1 { color: #6FC3DF; font-size: 28px; margin-bottom: 8px; }
+  h2 { color: #6FC3DF; font-size: 20px; margin: 32px 0 12px; border-bottom: 1px solid #333; padding-bottom: 8px; }
+  h3 { color: #e0e0e0; font-size: 16px; margin: 20px 0 8px; }
+  .banner { background: #22c55e22; border: 1px solid #22c55e44; border-radius: 8px; padding: 12px 20px; margin: 16px 0; color: #22c55e; font-weight: 600; text-align: center; }
+  .superseded { background: #ef444422; border: 1px solid #ef444444; border-radius: 8px; padding: 12px 20px; margin: 16px 0; color: #ef4444; font-weight: 600; text-align: center; font-size: 13px; }
+  .section { background: #1A1A1A; border-radius: 8px; padding: 20px; margin: 16px 0; }
+  ul { margin: 8px 0 8px 24px; }
+  li { margin: 4px 0; }
+  .phase { background: #1A1A1A; border-radius: 8px; padding: 20px; margin: 16px 0; border-left: 3px solid #6FC3DF; }
+  .phase-num { color: #6FC3DF; font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid #333; }
+  th { color: #6FC3DF; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; }
+  td { color: #ccc; font-size: 14px; }
+  code { background: #222; padding: 2px 6px; border-radius: 4px; font-size: 13px; color: #6FC3DF; }
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; margin-left: 8px; }
+  .tag-quick { background: #22c55e22; color: #22c55e; }
+  .tag-big { background: #f59e0b22; color: #f59e0b; }
+  .tag-free { background: #6FC3DF22; color: #6FC3DF; }
+  .win { color: #22c55e; font-weight: 600; }
+  footer { text-align: center; color: #555; font-size: 12px; margin-top: 48px; padding: 24px; border-top: 1px solid #222; }
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="brand">Be</span>
+  <span class="title">Plan — Shared State (Supabase) + Search Settings</span>
+</nav>
+
+<div class="container">
+  <h1>Plan: Shared State (Supabase) + Search Settings</h1>
+  <p style="color:#999;">Bid Buddy — Multi-user real-time sync + configurable comp search</p>
+
+  <div class="superseded">Supersedes: plan-shared-state-search-settings.html (D1 version). Switched to Supabase — existing account, real-time built in, less code.</div>
+
+  <div class="banner">Plan — Awaiting Approval</div>
+
+  <div class="section">
+    <h2>Why Supabase Over D1</h2>
+    <table>
+      <tr><th>Feature</th><th>D1 (old plan)</th><th>Supabase (this plan)</th></tr>
+      <tr><td>Real-time sync</td><td>Build 10s poll loop</td><td class="win">Built in — WebSocket push, instant</td></tr>
+      <tr><td>Offline queue</td><td>Build from scratch</td><td class="win">Partially handled by client SDK</td></tr>
+      <tr><td>Who's online (presence)</td><td>Build from scratch</td><td class="win">Built in — Supabase Presence API</td></tr>
+      <tr><td>Account</td><td>Need new Cloudflare account</td><td class="win">Scotty already has one (paused)</td></tr>
+      <tr><td>API layer</td><td>Build Worker + endpoints</td><td class="win">PostgREST auto-generates REST API from schema</td></tr>
+      <tr><td>Deploy</td><td>wrangler CLI, separate pipeline</td><td class="win">Dashboard only, no CLI needed</td></tr>
+    </table>
+    <p style="margin-top:12px; color:#999;">Net result: we write ~40% less code and get instant sync instead of 10-second polling. The previous Supabase removal was the <em>edge function proxy</em> (misuse). Using Supabase as an actual database is what it's built for.</p>
+  </div>
+
+  <div class="section">
+    <h2>Intent</h2>
+    <p>Three people on the auction floor, same inventory, same day. When Scotty marks a Teryx "interested" with a $4,200 max bid, the other two phones update instantly — no refresh, no waiting. One person runs a deep comp search, everyone gets the results.</p>
+    <p style="margin-top:8px;">Secondary: comp searches are locked to hardcoded regions. Add controls for radius, regions, and results count.</p>
+  </div>
+
+  <div class="section">
+    <h2>Scope</h2>
+    <h3>In Scope</h3>
+    <ul>
+      <li>Real-time item overlay sync — status, notes, maxBid, buddyTag push instantly across devices</li>
+      <li>Shared comps cache — one Apify search, all devices benefit</li>
+      <li>Room system — 6-digit code, no auth, 24-hour expiry</li>
+      <li>Presence — see who's connected ("Scotty, Joey, +1")</li>
+      <li>Offline resilience — queue edits, flush on reconnect</li>
+      <li>Search settings — radius, regions, results-per-source</li>
+    </ul>
+    <h3>Out of Scope</h3>
+    <ul>
+      <li>User accounts / passwords — room code is enough for a team tool</li>
+      <li>Full item sync (year, make, model, VIN) — stays local, overlay only</li>
+      <li>Chat between users</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>Architecture</h2>
+
+    <h3>Supabase Tables</h3>
+    <table>
+      <tr><th>Table</th><th>Purpose</th><th>Key Columns</th></tr>
+      <tr><td><code>rooms</code></td><td>Team session</td><td>id, room_code (unique 6-digit), created_by, created_at, expires_at</td></tr>
+      <tr><td><code>item_overlays</code></td><td>Shared item state</td><td>id, room_code, item_number, status, max_bid, note, buddy_tag, updated_by, updated_at</td></tr>
+      <tr><td><code>shared_comps</code></td><td>Shared comp cache</td><td>id, room_code, query_hash, query_text, results_json, fetched_by, fetched_at</td></tr>
+      <tr><td><code>activity</code></td><td>Change feed</td><td>id, room_code, item_number, field, old_value, new_value, user_name, created_at</td></tr>
+    </table>
+
+    <p style="margin-top:12px;">RLS disabled — team tool, not public. The room_code scopes all data. No row-level security complexity needed.</p>
+
+    <h3>Sync Flow</h3>
+    <ul>
+      <li><strong>On edit:</strong> Save to IndexedDB (local) → upsert to <code>item_overlays</code> (Supabase) → real-time broadcast triggers on other devices</li>
+      <li><strong>On subscribe:</strong> <code>supabase.channel('room:ABC123').on('postgres_changes', ...)</code> — instant push when any row in the room changes</li>
+      <li><strong>On connect:</strong> Pull all <code>item_overlays</code> for room → merge into local IndexedDB</li>
+      <li><strong>Presence:</strong> <code>channel.track({ user: 'Scotty' })</code> — shows who's in the room</li>
+      <li><strong>Offline:</strong> Edits queue in localStorage → on reconnect, flush queue → Supabase handles ordering by <code>updated_at</code></li>
+    </ul>
+
+    <h3>What Syncs vs What Stays Local</h3>
+    <table>
+      <tr><th>Data</th><th>Storage</th><th>Syncs?</th></tr>
+      <tr><td>Full inventory (year, make, model, VIN, etc.)</td><td>IndexedDB</td><td>No — each device imports from NPA independently</td></tr>
+      <tr><td>Status, notes, maxBid, buddyTag</td><td>IndexedDB + Supabase</td><td class="win">Yes — real-time</td></tr>
+      <tr><td>Comp results</td><td>localStorage + Supabase</td><td class="win">Yes — shared cache</td></tr>
+      <tr><td>AI estimates</td><td>IndexedDB (cachedEstimate)</td><td>No — cheap to regenerate per device</td></tr>
+      <tr><td>Settings (radius, sources, etc.)</td><td>localStorage</td><td>No — personal preference</td></tr>
+      <tr><td>Apify usage tracking</td><td>localStorage</td><td>No — per device</td></tr>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>Phases</h2>
+
+    <div class="phase">
+      <span class="phase-num">Phase 1 — Search Settings</span>
+      <span class="tag tag-quick">Quick Win</span>
+      <p style="margin-top:8px;">Radius slider, region picker, results-per-source in Settings. Wire through to fetch-comps. No backend change. Immediate value.</p>
+    </div>
+
+    <div class="phase">
+      <span class="phase-num">Phase 2 — Supabase Setup</span>
+      <span class="tag tag-free">Free Tier</span>
+      <p style="margin-top:8px;">Unpause existing Supabase project. Create 4 tables via SQL editor in dashboard. Install @supabase/supabase-js. Add env vars to Vercel. Verify connection.</p>
+    </div>
+
+    <div class="phase">
+      <span class="phase-num">Phase 3 — Real-time Sync</span>
+      <span class="tag tag-big">Core Feature</span>
+      <p style="margin-top:8px;">Room create/join. Subscribe to real-time changes. Hook saveItem to push overlays. Shared comps cache. This is the money phase.</p>
+    </div>
+
+    <div class="phase">
+      <span class="phase-num">Phase 4 — Sync UX + Offline</span>
+      <span class="tag tag-big">Polish</span>
+      <p style="margin-top:8px;">Room UI in Settings. Sync status dot in header. Activity feed. Offline queue. Presence (who's connected).</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Constraints</h2>
+    <ul>
+      <li><strong>Supabase free tier:</strong> 500MB database, 2GB bandwidth, 50K monthly active users, real-time connections included. Way more than 3 users need.</li>
+      <li><strong>No auth:</strong> Room code is the only gate. Fine for team use.</li>
+      <li><strong>Overlay only:</strong> Full item data stays local. Sync payload is small — just status, maxBid, note, buddyTag per item.</li>
+      <li><strong>Last-write-wins:</strong> Supabase upsert by <code>updated_at</code>. Activity table preserves history.</li>
+      <li><strong>24-hour rooms:</strong> Auto-expire. Each auction day = fresh room.</li>
+      <li><strong>Existing Vercel API stays:</strong> fetch-comps, fetch-npa-inventory, scan-tag remain on Vercel. Supabase handles only sync.</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>File Impact</h2>
+    <table>
+      <tr><th>File</th><th>Change</th></tr>
+      <tr><td><code>src/utils/settings.ts</code></td><td>Add searchRadius, searchRegions, resultsPerSource</td></tr>
+      <tr><td><code>src/screens/SettingsScreen.tsx</code></td><td>Search controls + Room UI + Presence display</td></tr>
+      <tr><td><code>src/services/multiSourceComps.ts</code></td><td>Pass search params, check Supabase comps cache before Apify</td></tr>
+      <tr><td><code>api/fetch-comps.js</code></td><td>Respect incoming radius/regions/limits</td></tr>
+      <tr><td><code>src/lib/supabase.ts</code></td><td>New — Supabase client init</td></tr>
+      <tr><td><code>src/services/syncClient.ts</code></td><td>New — room state, real-time subscription, presence, offline queue</td></tr>
+      <tr><td><code>src/utils/db.ts</code></td><td>Hook saveItem to push overlay to Supabase</td></tr>
+      <tr><td><code>src/App.tsx</code></td><td>Sync provider, status indicator</td></tr>
+      <tr><td><code>.env.local</code></td><td>VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY</td></tr>
+    </table>
+  </div>
+
+</div>
+
+<footer>Generated 2026-04-03 00:10</footer>
+
+</body>
+</html>

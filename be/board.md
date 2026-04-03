@@ -29,15 +29,15 @@ Source: plan-pdf-import-overhaul.html → estimate-pdf-import-overhaul.html
 
 ---
 
-## Board 3 — Search Settings + D1 Foundation (16 pts)
+## Board 3 — Search Settings + Supabase Setup (16 pts)
 
-Source: plan-shared-state-search-settings.html → estimate-shared-state-search-settings.html
+Source: plan-shared-state-supabase.html → estimate-shared-state-supabase.html
 
 ### Ready
 - {search radius + region + results-per-source settings, add to, AppSettings + SettingsScreen} · 5 pts · ~a
 - {search params passthrough, update in, multiSourceComps + fetch-comps API} · 3 pts · ~u
-- {D1 database + 4-table schema, add to, Cloudflare} · 5 pts · ~a
-- {Worker deploy + CORS + route verification, add to, Cloudflare} · 3 pts · ~a
+- {Supabase tables — rooms + item_overlays + shared_comps + activity, add to, Supabase project} · 5 pts · ~a
+- {Supabase JS client + env vars + connection verify, add to, bid-buddy} · 3 pts · ~a
 
 ### In Progress
 
@@ -45,12 +45,12 @@ Source: plan-shared-state-search-settings.html → estimate-shared-state-search-
 
 ---
 
-## Board 4 — Sync API + Client (15 pts) ⛔ Blocked by Board 3
+## Board 4 — Real-time Sync (15 pts) ⛔ Blocked by Board 3
 
 ### Ready
-- {room create + join + expiry endpoints, add to, Worker API} · 5 pts · ~a
-- {item overlay CRUD + comps cache + activity log endpoints, add to, Worker API} · 5 pts · ~a
-- {sync client with poll loop + merge logic, add to, src/services} · 5 pts · ~a
+- {room create + join + nickname system, add to, src/services/syncClient} · 5 pts · ~a
+- {real-time item overlay subscription + upsert on save, add to, syncClient + db.ts} · 5 pts · ~a
+- {shared comps cache — push to Supabase after fetch + check before Apify, update in, multiSourceComps} · 5 pts · ~u
 
 ### In Progress
 
@@ -58,13 +58,12 @@ Source: plan-shared-state-search-settings.html → estimate-shared-state-search-
 
 ---
 
-## Board 5 — Sync UX + Offline + Validation (18 pts) ⛔ Blocked by Board 4
+## Board 5 — Sync UX + Offline (15 pts) ⛔ Blocked by Board 4
 
 ### Ready
-- {offline queue + auto-flush on reconnect, add to, sync client} · 5 pts · ~a
-- {saveItem sync hook + shared comps cache, update in, db.ts + multiSourceComps} · 5 pts · ~u
-- {room create/join UI + connected users display, add to, SettingsScreen} · 5 pts · ~a
-- {sync status dot + activity feed, add to, App header + SettingsScreen} · 3 pts · ~a
+- {offline write queue + auto-flush on reconnect, add to, syncClient} · 5 pts · ~a
+- {room create/join UI + presence display, add to, SettingsScreen} · 5 pts · ~a
+- {sync status dot + activity feed, add to, App header + SettingsScreen} · 5 pts · ~a
 
 ### In Progress
 

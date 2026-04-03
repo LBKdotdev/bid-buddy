@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estimate — Shared State (Supabase) + Search Settings</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #111111; color: #e0e0e0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 1.6; }
+  nav { position: sticky; top: 0; background: #000; border-bottom: 2px solid #6FC3DF; padding: 12px 24px; z-index: 100; display: flex; align-items: center; gap: 16px; }
+  nav .brand { color: #6FC3DF; font-weight: 700; font-size: 18px; }
+  nav .title { color: #999; font-size: 14px; }
+  .container { max-width: 800px; margin: 0 auto; padding: 24px 16px; }
+  h1 { color: #6FC3DF; font-size: 28px; margin-bottom: 8px; }
+  h2 { color: #6FC3DF; font-size: 20px; margin: 32px 0 12px; border-bottom: 1px solid #333; padding-bottom: 8px; }
+  h3 { color: #e0e0e0; font-size: 16px; margin: 20px 0 8px; }
+  .section { background: #1A1A1A; border-radius: 8px; padding: 20px; margin: 16px 0; }
+  .board { background: #1A1A1A; border-radius: 8px; padding: 20px; margin: 16px 0; border-left: 3px solid #6FC3DF; }
+  .board-blocked { border-left-color: #ef4444; }
+  .superseded { background: #ef444422; border: 1px solid #ef444444; border-radius: 8px; padding: 10px 16px; margin: 16px 0; color: #ef4444; font-weight: 600; text-align: center; font-size: 13px; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid #333; }
+  th { color: #6FC3DF; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; }
+  td { color: #ccc; font-size: 14px; }
+  .pts { color: #6FC3DF; font-weight: 700; font-family: monospace; }
+  .cmd { color: #22c55e; font-weight: 600; font-family: monospace; }
+  .total { color: #6FC3DF; font-weight: 700; font-size: 16px; }
+  .blocked { color: #ef4444; font-weight: 600; }
+  .win { color: #22c55e; }
+  ul { margin: 8px 0 8px 24px; }
+  li { margin: 4px 0; }
+  code { background: #222; padding: 2px 6px; border-radius: 4px; font-size: 13px; color: #6FC3DF; }
+  footer { text-align: center; color: #555; font-size: 12px; margin-top: 48px; padding: 24px; border-top: 1px solid #222; }
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="brand">Be</span>
+  <span class="title">Estimate — Shared State (Supabase)</span>
+</nav>
+
+<div class="container">
+  <h1>Estimate: Shared State (Supabase) + Search Settings</h1>
+  <p style="color:#999;">Source: plan-shared-state-supabase.html — 3 boards, 11 items, 46 pts</p>
+
+  <div class="superseded">Supersedes: estimate-shared-state-search-settings.html (D1 version, 49 pts). Supabase saves 3 pts — real-time + presence are built in.</div>
+
+  <!-- Overview -->
+  <div class="section">
+    <h2>Boards Overview</h2>
+    <table>
+      <tr><th>Board</th><th>Theme</th><th>Items</th><th>Points</th><th>Status</th></tr>
+      <tr><td>Board 3</td><td>Search Settings + Supabase Setup</td><td>4</td><td class="pts">16</td><td>Ready</td></tr>
+      <tr><td>Board 4</td><td>Real-time Sync</td><td>3</td><td class="pts">15</td><td class="blocked">⛔ Blocked by Board 3</td></tr>
+      <tr><td>Board 5</td><td>Sync UX + Offline</td><td>4</td><td class="pts">15</td><td class="blocked">⛔ Blocked by Board 4</td></tr>
+      <tr><td colspan="3" style="text-align:right; font-weight:700;">Total</td><td class="total">46 pts</td><td></td></tr>
+    </table>
+
+    <h3>What Changed from D1 Estimate</h3>
+    <table>
+      <tr><th>D1 Version</th><th>Supabase Version</th><th>Savings</th></tr>
+      <tr><td>Build Worker API (5 pts)</td><td class="win">PostgREST auto-API (0 pts)</td><td class="win">-5 pts</td></tr>
+      <tr><td>Build poll loop (part of sync client)</td><td class="win">Real-time subscription (included)</td><td class="win">Simpler code</td></tr>
+      <tr><td>Build presence from scratch</td><td class="win">Supabase Presence API (free)</td><td class="win">Included in UX</td></tr>
+      <tr><td>Deploy Worker + CORS (3 pts)</td><td>Supabase client + env vars (3 pts)</td><td>Same</td></tr>
+      <tr><td>12 items, 49 pts</td><td>11 items, 46 pts</td><td class="win">-3 pts net</td></tr>
+    </table>
+  </div>
+
+  <!-- Board 3 -->
+  <div class="board">
+    <h2>Board 3 — Search Settings + Supabase Setup (16 pts)</h2>
+    <p style="color:#999; margin-bottom:12px;">Immediate value: search controls work right away. Supabase setup unblocks all sync work.</p>
+    <table>
+      <tr><th>Item</th><th>Cmd</th><th>Pts</th></tr>
+      <tr>
+        <td>{search radius + region + results-per-source settings, add to, AppSettings + SettingsScreen}</td>
+        <td class="cmd">~a</td>
+        <td class="pts">5</td>
+      </tr>
+      <tr>
+        <td>{search params passthrough, update in, multiSourceComps + fetch-comps API}</td>
+        <td class="cmd">~u</td>
+        <td class="pts">3</td>
+      </tr>
+      <tr>
+        <td>{Supabase tables — rooms + item_overlays + shared_comps + activity, add to, Supabase project}</td>
+        <td class="cmd">~a</td>
+        <td class="pts">5</td>
+      </tr>
+      <tr>
+        <td>{Supabase JS client + env vars + connection verify, add to, bid-buddy}</td>
+        <td class="cmd">~a</td>
+        <td class="pts">3</td>
+      </tr>
+    </table>
+    <h3>Value Rationale</h3>
+    <ul>
+      <li>Search settings deliver value before sync exists — adjust radius and regions for the next auction.</li>
+      <li>Supabase setup is the single dependency for Boards 4 and 5. Unpause project, run SQL, install client. Fast.</li>
+    </ul>
+    <h3>Prerequisite</h3>
+    <ul>
+      <li>Scotty unpauses Supabase project from dashboard → provides project URL + anon key.</li>
+    </ul>
+  </div>
+
+  <!-- Board 4 -->
+  <div class="board board-blocked">
+    <h2>Board 4 — Real-time Sync (15 pts) <span class="blocked">⛔ Blocked by Board 3</span></h2>
+    <p style="color:#999; margin-bottom:12px;">The money board. After this ships, edits flow between devices in real-time.</p>
+    <table>
+      <tr><th>Item</th><th>Cmd</th><th>Pts</th></tr>
+      <tr>
+        <td>{room create + join + nickname system, add to, src/services/syncClient}</td>
+        <td class="cmd">~a</td>
+        <td class="pts">5</td>
+      </tr>
+      <tr>
+        <td>{real-time item overlay subscription + upsert on save, add to, syncClient + db.ts}</td>
+        <td class="cmd">~a</td>
+        <td class="pts">5</td>
+      </tr>
+      <tr>
+        <td>{shared comps cache — push to Supabase after fetch + check before Apify, update in, multiSourceComps}</td>
+        <td class="cmd">~u</td>
+        <td class="pts">5</td>
+      </tr>
+    </table>
+    <h3>Value Rationale</h3>
+    <ul>
+      <li>Room system is the handshake — scopes all shared data to a 6-digit code.</li>
+      <li>Real-time subscription is the core: <code>supabase.channel('room:ABC123').on('postgres_changes', ...)</code> — no polling, instant push.</li>
+      <li>Shared comps = shared Apify dollars. One search, three devices.</li>
+    </ul>
+  </div>
+
+  <!-- Board 5 -->
+  <div class="board board-blocked">
+    <h2>Board 5 — Sync UX + Offline (15 pts) <span class="blocked">⛔ Blocked by Board 4</span></h2>
+    <p style="color:#999; margin-bottom:12px;">Make sync visible and resilient. The user-facing layer.</p>
+    <table>
+      <tr><th>Item</th><th>Cmd</th><th>Pts</th></tr>
+      <tr>
+        <td>{offline write queue + auto-flush on reconnect, add to, syncClient}</td>
+        <td class="cmd">~a</td>
+        <td class="pts">5</td>
+      </tr>
+      <tr>
+        <td>{room create/join UI + presence display, add to, SettingsScreen}</td>
+        <td class="cmd">~a</td>
+        <td class="pts">5</td>
+      </tr>
+      <tr>
+        <td>{sync status dot + activity feed, add to, App header + SettingsScreen}</td>
+        <td class="cmd">~a</td>
+        <td class="pts">5</td>
+      </tr>
+    </table>
+    <h3>Value Rationale</h3>
+    <ul>
+      <li>Offline queue is critical — cell signal in auction warehouses is unreliable.</li>
+      <li>Room UI makes sync accessible — no terminal, just a code.</li>
+      <li>Presence + sync dot = trust. Green dot means "we're all seeing the same thing."</li>
+      <li>Activity feed: "Joey set TERYX4 max bid $4,200 at 2:14pm" — know what your team is doing.</li>
+    </ul>
+  </div>
+
+  <!-- Dependencies -->
+  <div class="section">
+    <h2>Dependencies</h2>
+    <table>
+      <tr><th>Dependency</th><th>Blocks</th><th>Owner</th></tr>
+      <tr><td>Unpause Supabase project</td><td>Board 3 (table creation)</td><td>Scotty — dashboard action</td></tr>
+      <tr><td>Supabase URL + anon key</td><td>Board 3 (client setup)</td><td>Scotty — from project settings</td></tr>
+      <tr><td>Tables created + client connected</td><td>Board 4 (all sync)</td><td>Be — built in Board 3</td></tr>
+      <tr><td>Real-time subscription working</td><td>Board 5 (UX + offline)</td><td>Be — built in Board 4</td></tr>
+    </table>
+  </div>
+
+</div>
+
+<footer>Generated 2026-04-03 00:10</footer>
+
+</body>
+</html>
