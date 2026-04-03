@@ -1,4 +1,4 @@
-// Multi-source comps aggregator - uses Supabase Edge Function
+// Multi-source comps aggregator - uses Vercel serverless functions
 // Sources: eBay Sold (free), Facebook Marketplace (Apify), Craigslist (Apify)
 
 export interface Comp {
@@ -66,7 +66,7 @@ export async function searchAllSources(
       apifyEnabled: data.apifyEnabled,
     };
   } catch (error) {
-    console.error('Supabase fetch-comps error:', error);
+    console.error('fetch-comps error:', error);
     return {
       comps: [],
       sources: { ebay: 0, facebook: 0, craigslist: 0 },

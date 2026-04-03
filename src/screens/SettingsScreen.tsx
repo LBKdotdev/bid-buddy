@@ -60,19 +60,19 @@ export default function SettingsScreen({ onBack }: SettingsScreenProps) {
             <div className="p-4">
               <label className="text-sm text-zinc-300 font-medium">Sync Mode</label>
               <p className="text-xs text-zinc-500 mt-0.5 mb-3">
-                Direct mode bypasses Supabase — useful if the edge function is paused
+                Direct mode bypasses Vercel proxy — useful for local dev
               </p>
               <div className="grid grid-cols-2 gap-2">
                 <button
-                  onClick={() => update({ syncMode: 'supabase' })}
+                  onClick={() => update({ syncMode: 'vercel' })}
                   className={`py-2.5 px-3 rounded-xl text-sm font-medium border transition-all ${
-                    settings.syncMode === 'supabase'
+                    settings.syncMode === 'vercel'
                       ? 'bg-electric/10 border-electric/40 text-electric'
                       : 'bg-surface-700 border-surface-500/30 text-zinc-400'
                   }`}
                 >
                   <Wifi size={14} className="inline mr-1.5" />
-                  Supabase Proxy
+                  Vercel Proxy
                 </button>
                 <button
                   onClick={() => update({ syncMode: 'direct' })}
@@ -263,7 +263,7 @@ export default function SettingsScreen({ onBack }: SettingsScreenProps) {
               ['Storage', 'IndexedDB (client-side)'],
               ['AI', 'Groq (LLaMA Scout)'],
               ['Comps', 'eBay + CycleTrader + Craigslist'],
-              ['Proxy', 'Supabase Edge Functions'],
+              ['Proxy', 'Vercel Serverless Functions'],
               ['NPA API', 'GCP Cloud Run'],
               ['Deploy', 'Vercel'],
             ].map(([label, value]) => (

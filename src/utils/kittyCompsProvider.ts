@@ -1,5 +1,5 @@
 // Kitty Comps Provider — uses real market data from eBay/FB/Craigslist
-// NO mock data. All results come from live scraping via Supabase edge function.
+// NO mock data. All results come from live scraping via Vercel serverless functions.
 
 import { Comp, CompsSummary, FilterDebugInfo } from '../types/comps';
 import { KittyCompsSearchParams, KittyCompsSearchResult, KittyCompsExpansion } from '../types/kittyComps';

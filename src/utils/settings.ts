@@ -2,7 +2,7 @@ const SETTINGS_KEY = 'lbk_settings';
 
 export interface AppSettings {
   // API Configuration
-  syncMode: 'supabase' | 'direct'; // direct bypasses Supabase edge function
+  syncMode: 'vercel' | 'direct'; // direct bypasses Vercel serverless proxy
   npaApiUrl: string;
 
   // AI Estimate Quality
@@ -25,7 +25,7 @@ export interface AppSettings {
 }
 
 const DEFAULT_SETTINGS: AppSettings = {
-  syncMode: 'supabase',
+  syncMode: 'vercel',
   npaApiUrl: 'https://playwright-reports-150462460430.us-west4.run.app/report/npauctions/inventory',
 
   aiQuality: 'balanced',
