@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { Upload, FileUp, Download, Truck, Package, Calculator, Search, RotateCcw, Table } from 'lucide-react';
 import type { InventoryItem } from '../types/inventory';
 import { parseCSV, csvRowToInventoryItem } from '../utils/csv';
-import { parsePDF } from '../utils/pdfParser';
+import { parseCatalogPDF } from '../utils/pdfParser';
 import { saveItems, getAllItems, getItem, deleteAllItems } from '../utils/db';
 
 interface ImportScreenProps {
@@ -89,7 +89,7 @@ export default function ImportScreen({ onImportSuccess, onViewInventory, onOpenC
 
       if (file.name.toLowerCase().endsWith('.pdf')) {
         console.log('Parsing PDF file:', file.name);
-        rows = await parsePDF(file);
+        rows = await parseCatalogPDF(file);
         console.log('Parsed PDF rows:', rows.length);
       } else {
         const text = await file.text();
