@@ -63,5 +63,18 @@
     "tokens": null,
     "cost_usd": null,
     "commit": null
+  },
+  {
+    "triple": "{PDF import overhaul, planned for, bid-buddy}",
+    "command": "~p",
+    "description": "Plan PDF import overhaul — 6 phases, all NPA fields, auto-detect catalog type",
+    "project": "bid-buddy",
+    "repo": "LBKdotdev/bid-buddy",
+    "date": "2026-04-02",
+    "time": "23:45",
+    "duration_sec": 180,
+    "tokens": null,
+    "cost_usd": null,
+    "commit": null
   }
 ]

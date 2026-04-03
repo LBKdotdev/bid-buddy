@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plan — PDF Import Overhaul</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #111111; color: #e0e0e0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 1.6; }
+  nav { position: sticky; top: 0; background: #000; border-bottom: 2px solid #6FC3DF; padding: 12px 24px; z-index: 100; display: flex; align-items: center; gap: 16px; }
+  nav .brand { color: #6FC3DF; font-weight: 700; font-size: 18px; }
+  nav .title { color: #999; font-size: 14px; }
+  .container { max-width: 800px; margin: 0 auto; padding: 24px 16px; }
+  h1 { color: #6FC3DF; font-size: 28px; margin-bottom: 8px; }
+  h2 { color: #6FC3DF; font-size: 20px; margin: 32px 0 12px; border-bottom: 1px solid #333; padding-bottom: 8px; }
+  h3 { color: #ccc; font-size: 16px; margin: 20px 0 8px; }
+  .banner { background: #6FC3DF22; border: 1px solid #6FC3DF44; border-radius: 8px; padding: 12px 20px; margin: 16px 0 24px; color: #6FC3DF; font-weight: 600; }
+  .section { background: #1A1A1A; border-radius: 8px; padding: 20px; margin: 16px 0; }
+  ul { margin: 8px 0 8px 24px; }
+  li { margin: 4px 0; }
+  code { background: #2a2a2a; padding: 2px 6px; border-radius: 3px; font-size: 13px; }
+  .field { color: #6FC3DF; font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+  th { text-align: left; color: #6FC3DF; border-bottom: 1px solid #333; padding: 8px; font-size: 13px; }
+  td { padding: 8px; border-bottom: 1px solid #222; font-size: 13px; }
+  .new { color: #4ade80; }
+  footer { text-align: center; color: #555; font-size: 12px; margin-top: 48px; padding: 24px; border-top: 1px solid #222; }
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="brand">Be</span>
+  <span class="title">Plan — PDF Import Overhaul</span>
+</nav>
+
+<div class="container">
+  <h1>PDF Import Overhaul</h1>
+  <div class="banner">Plan — Awaiting Approval</div>
+
+  <div class="section">
+    <h2>Intent</h2>
+    <p>Make Bid Buddy import <strong>every field of value</strong> from both NPA catalog PDFs — motorcycle and RVM — so Scotty has full data on the auction floor. Auto-detect which catalog is which from the filename. No manual catalog type picker.</p>
+  </div>
+
+  <div class="section">
+    <h2>Scope</h2>
+    <h3>What's broken</h3>
+    <ul>
+      <li>PDF upload always routes to motorcycle parser — no way to import RVM catalog</li>
+      <li>Motorcycle parser misses: zone, EM/FR/TR subscores, DMV penalties, book value (as structured field)</li>
+      <li>RVM parser misses: color, stock#, book value (reliable), detailed condition notes</li>
+      <li><code>InventoryItem</code> type missing fields: <span class="new">color, zone, bookValue, conditionDetail</span></li>
+      <li>RVM items (Sea-Doo, Yamaha PWC, boats, trailers) never get category auto-detection because they never reach <code>detectCategory()</code></li>
+    </ul>
+
+    <h3>Two PDF formats (from real NPA catalogs)</h3>
+    <table>
+      <tr><th>Field</th><th>Motorcycle Catalog</th><th>RVM Catalog</th></tr>
+      <tr><td>Filename pattern</td><td><code>SAN DIEGO CATALOG *.pdf</code></td><td><code>RVM SAN DIEGO CATALOG *.pdf</code></td></tr>
+      <tr><td>Format</td><td>Tabular — one line per item</td><td>Block — 2 pages per item</td></tr>
+      <tr><td>Item number</td><td>4-digit (1000–1999)</td><td>4-digit as AUCTION # (5005+)</td></tr>
+      <tr><td>Year/Make/Model</td><td>In columns after Zone</td><td>Title line at top of block</td></tr>
+      <tr><td>VIN</td><td>8-char partial before CR score</td><td>Full 17-char</td></tr>
+      <tr><td>Miles/Hours</td><td>Before VIN</td><td>Mi/HR: field</td></tr>
+      <tr><td>CR Score</td><td><code>73: EM=9, FR=8, TR=9</code></td><td>CONDITION REPORT: 86</td></tr>
+      <tr><td>Subscores</td><td>EM, FR, TR inline</td><td>30+ detailed line items</td></tr>
+      <tr><td>Book Value</td><td><code>$8,595</code></td><td><code>BOOK VALUE: $9,200.00</code></td></tr>
+      <tr><td>Docs</td><td><code>AZ TITLE</code></td><td><code>DOCS: CA TITLE</code></td></tr>
+      <tr><td>Color</td><td>Not present</td><td><code>COLOR: GRY</code></td></tr>
+      <tr><td>Zone</td><td><code>HD1</code>, <code>IMP1</code> etc.</td><td>Not present</td></tr>
+      <tr><td>DMV Penalties</td><td>After title info</td><td>Not present</td></tr>
+      <tr><td>Stock #</td><td>Not present</td><td><code>STOCK#: 10178263</code></td></tr>
+      <tr><td>Categories present</td><td>Motorcycles, ATV/SxS</td><td>RVs, boats, PWC, trailers</td></tr>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>Approach</h2>
+
+    <h3>Phase 1 — Extend the data model</h3>
+    <p>Add new fields to <code>InventoryItem</code>: <span class="new">color</span>, <span class="new">zone</span>, <span class="new">bookValue</span> (number), <span class="new">conditionDetail</span> (string — summary of subscores). These are nullable. No migration needed — IndexedDB is schemaless.</p>
+
+    <h3>Phase 2 — Auto-detect catalog type</h3>
+    <p>In the PDF upload handler, detect from filename:</p>
+    <ul>
+      <li>Filename contains "RVM" → <code>rv_marine</code></li>
+      <li>Everything else → <code>motorcycles</code></li>
+    </ul>
+    <p>Replace the <code>parsePDF(file)</code> call with <code>parseCatalogPDF(file, detectedType)</code>. Kill the legacy <code>parsePDF</code> wrapper.</p>
+
+    <h3>Phase 3 — Rewrite motorcycle parser</h3>
+    <p>The existing parser works for the basic fields but misses valuable data. Add extraction for:</p>
+    <ul>
+      <li><span class="field">zone</span> — already captured in regex group, just not stored</li>
+      <li><span class="field">bookValue</span> — already extracted as number, store it properly</li>
+      <li><span class="field">conditionDetail</span> — capture the <code>EM=9, FR=8, TR=9</code> string</li>
+      <li><span class="field">DMV penalties</span> — append to notes field</li>
+    </ul>
+    <p>Run <code>detectCategory()</code> on parsed make/model so SxS items in the moto catalog get correct category.</p>
+
+    <h3>Phase 4 — Rewrite RVM parser</h3>
+    <p>Current RVM parser barely works. Rewrite to match the actual block format:</p>
+    <ul>
+      <li>Title line: <code>YYYY MAKE MODEL</code> at top of each block</li>
+      <li>Structured fields: LOCATION, DOCS, CONDITION REPORT, VIN, STOCK#, Mi/HR, COLOR, BOOK VALUE, AUCTION #</li>
+      <li><span class="field">conditionDetail</span> — summarize the low-scoring items (score &lt; 7) as a quick-read string</li>
+      <li>Run <code>detectCategory()</code> on make/model — Sea-Doo → rv_marine, trailers → rv_marine, etc.</li>
+    </ul>
+
+    <h3>Phase 5 — Test with real PDFs</h3>
+    <p>Import both real NPA PDFs. Verify item counts, field completeness, category detection. Check edge cases: multi-line models, TMU mileage, missing book values, CPO candidates (#).</p>
+
+    <h3>Phase 6 — Clean up dead Supabase</h3>
+    <p>Remove <code>supabase/</code> folder, <code>@supabase/supabase-js</code> from package.json, stale references in CLAUDE.md.</p>
+  </div>
+
+  <div class="section">
+    <h2>Constraints</h2>
+    <ul>
+      <li>No UI changes to import flow — just pick a file, it works</li>
+      <li>Existing CSV import must keep working</li>
+      <li>Existing items in IndexedDB must not break — new fields are nullable</li>
+      <li>No new dependencies</li>
+      <li>Must work offline (pdfjs-dist already bundled)</li>
+    </ul>
+  </div>
+
+</div>
+
+<footer>Generated 2026-04-02 23:45</footer>
+
+</body>
+</html>
