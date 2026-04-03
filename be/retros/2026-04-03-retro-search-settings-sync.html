@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Retro — Search Settings + Real-time Sync</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #111111; color: #e0e0e0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 1.6; }
+  nav { position: sticky; top: 0; background: #000; border-bottom: 2px solid #6FC3DF; padding: 12px 24px; z-index: 100; display: flex; align-items: center; gap: 16px; }
+  nav .brand { color: #6FC3DF; font-weight: 700; font-size: 18px; }
+  nav .title { color: #999; font-size: 14px; }
+  .container { max-width: 800px; margin: 0 auto; padding: 24px 16px; }
+  h1 { color: #6FC3DF; font-size: 28px; margin-bottom: 8px; }
+  h2 { color: #6FC3DF; font-size: 20px; margin: 32px 0 12px; border-bottom: 1px solid #333; padding-bottom: 8px; }
+  .section { background: #1A1A1A; border-radius: 8px; padding: 20px; margin: 16px 0; }
+  ul { margin: 8px 0 8px 24px; }
+  li { margin: 6px 0; color: #ccc; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid #333; }
+  th { color: #6FC3DF; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; }
+  td { color: #ccc; font-size: 14px; }
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 16px 0; }
+  .stat { text-align: center; background: #1A1A1A; border-radius: 8px; padding: 16px 8px; }
+  .stat .big { font-size: 36px; font-weight: 700; color: #6FC3DF; }
+  .stat .label { color: #888; font-size: 11px; margin-top: 4px; text-transform: uppercase; }
+  .good { border-left: 3px solid #22c55e; padding-left: 12px; margin: 8px 0; }
+  .warn { border-left: 3px solid #f59e0b; padding-left: 12px; margin: 8px 0; }
+  .next { border-left: 3px solid #6FC3DF; padding-left: 12px; margin: 8px 0; }
+  code { background: #222; padding: 2px 6px; border-radius: 4px; font-size: 13px; color: #6FC3DF; }
+  footer { text-align: center; color: #555; font-size: 12px; margin-top: 48px; padding: 24px; border-top: 1px solid #222; }
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="brand">Be</span>
+  <span class="title">Retro</span>
+</nav>
+
+<div class="container">
+  <h1>Retro: Search Settings + Real-time Sync</h1>
+  <p style="color:#999;">~P ~E /~B ~T ~F/ ~S ~R chain — Boards 3-5</p>
+
+  <div class="grid">
+    <div class="stat">
+      <div class="big">20</div>
+      <div class="label">Commits</div>
+    </div>
+    <div class="stat">
+      <div class="big">46</div>
+      <div class="label">Points</div>
+    </div>
+    <div class="stat">
+      <div class="big">12</div>
+      <div class="label">Tests</div>
+    </div>
+    <div class="stat">
+      <div class="big">0</div>
+      <div class="label">Fix Loops</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Chain Executed</h2>
+    <table>
+      <tr><th>Step</th><th>Command</th><th>What</th></tr>
+      <tr><td>1</td><td>~p</td><td>Plan shared state + search settings (D1 version first)</td></tr>
+      <tr><td>2</td><td>~e</td><td>Estimate — 3 boards, 49 pts (D1)</td></tr>
+      <tr><td>3</td><td>~p</td><td>Re-plan for Supabase after pivot (superseded D1)</td></tr>
+      <tr><td>4</td><td>~e</td><td>Re-estimate — 3 boards, 11 items, 46 pts (Supabase)</td></tr>
+      <tr><td>5</td><td>~b ×3</td><td>Board 3 (16 pts) → Board 4 (15 pts) → Board 5 (15 pts)</td></tr>
+      <tr><td>6</td><td>~t</td><td>12 checks, all pass</td></tr>
+      <tr><td>7</td><td>~s</td><td>Ship — 19 commits pushed, Vercel auto-deploy</td></tr>
+      <tr><td>8</td><td>~r</td><td>This retro</td></tr>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>What Went Well</h2>
+    <div class="good">
+      <strong>Mid-stream pivot handled cleanly.</strong> Started with Cloudflare D1, realized Joey wasn't available to own the backend, pivoted to Supabase in one conversation. Re-planned, re-estimated, zero wasted code. The D1 plan was superseded but the search settings work carried forward untouched.
+    </div>
+    <div class="good">
+      <strong>Overlay-only sync was the right call.</strong> Only syncing status/maxBid/note/buddyTag keeps payloads tiny and avoids conflicts on heavy cached data (comps, estimates, issues). Each phone owns its own IndexedDB — Supabase is just the overlay layer.
+    </div>
+    <div class="good">
+      <strong>Shared comps cache saves real money.</strong> If one buddy searches "2019 Can-Am Ryker 900", the result goes to Supabase. Other buddies skip the Apify call entirely. At ~$0.03/search across 500+ items and 3 users, that's meaningful savings.
+    </div>
+    <div class="good">
+      <strong>Zero fix loops.</strong> ~B → ~T → ~S with no ~F cycle. TypeScript caught everything at compile time. The applyOverlay no-loop design (writes to IndexedDB directly, not via saveItem) avoided the classic real-time echo bug.
+    </div>
+    <div class="good">
+      <strong>Board 5 Item 1 was already done.</strong> Offline queue shipped as part of Board 4's syncClient. Recognized it, marked it via external contributor rule, moved on. No duplicate work.
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>What Could Be Better</h2>
+    <div class="warn">
+      <strong>Supabase setup was manual and bumpy.</strong> Unpausing the project, finding API keys, running SQL, setting Vercel env vars — all required back-and-forth guidance with screenshots. A provisioner script or setup wizard would smooth this for any future Supabase project.
+    </div>
+    <div class="warn">
+      <strong>No live integration test.</strong> 12/12 checks are code-level verification (exports exist, wiring correct, types compile). Haven't tested actual room creation → join → overlay sync across two browser tabs yet. That's the real proof.
+    </div>
+    <div class="warn">
+      <strong>Bundle size growing.</strong> Production build is 950KB (gzip 269KB). Supabase JS SDK is chunky. May want to lazy-load the sync module or code-split Settings screen eventually.
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>What's Next</h2>
+    <div class="next">
+      <strong>Live test with 2-3 phones.</strong> Open the app on two devices, create a room on one, join on the other. Change a status, confirm it appears. This is the acid test before auction day.
+    </div>
+    <div class="next">
+      <strong>Floor screen sync awareness.</strong> FloorScreen is the live auction lookup — it should show a sync indicator per item (who marked it, when). Currently it reads from local IndexedDB but doesn't surface buddy edits visually.
+    </div>
+    <div class="next">
+      <strong>Buddy tag assignment in room.</strong> When in a room, items could auto-assign a buddy tag showing who's covering which item on the floor. Prevents duplicate bidding.
+    </div>
+    <div class="next">
+      <strong>Conflict resolution.</strong> Current model is last-write-wins. Fine for 3 buddies coordinating, but if two people edit the same item's maxBid simultaneously, one gets overwritten silently. A toast notification ("Joey changed maxBid on #142") would help — the activity feed exists but it's only in Settings.
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Session Totals (All Boards)</h2>
+    <table>
+      <tr><th>Board</th><th>Scope</th><th>Pts</th><th>Items</th><th>Ship</th></tr>
+      <tr><td>1</td><td>Category Auto-Detect + Cleanup</td><td>21</td><td>5</td><td>~GO chain #1</td></tr>
+      <tr><td>2</td><td>PDF Import Overhaul</td><td>19</td><td>5</td><td>~GO chain #1</td></tr>
+      <tr><td>3</td><td>Search Settings + Supabase Setup</td><td>16</td><td>4</td><td>~GO chain #2</td></tr>
+      <tr><td>4</td><td>Real-time Sync Engine</td><td>15</td><td>3</td><td>~GO chain #2</td></tr>
+      <tr><td>5</td><td>Sync UX + Offline</td><td>15</td><td>3</td><td>~GO chain #2</td></tr>
+      <tr style="font-weight:600"><td colspan="2">Total</td><td>86</td><td>20</td><td>2 ships</td></tr>
+    </table>
+    <p style="color:#888;font-size:13px;margin-top:12px;">20 telemetry entries logged. 20+ commits across 2 ~GO chains. Zero fix loops in either chain.</p>
+  </div>
+</div>
+
+<footer>Generated 2026-04-03 01:00</footer>
+</body>
+</html>
