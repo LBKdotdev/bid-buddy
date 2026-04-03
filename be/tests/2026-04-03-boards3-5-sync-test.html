@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Test — Boards 3-5: Search Settings + Sync</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #111111; color: #e0e0e0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 1.6; }
+  nav { position: sticky; top: 0; background: #000; border-bottom: 2px solid #6FC3DF; padding: 12px 24px; z-index: 100; display: flex; align-items: center; gap: 16px; }
+  nav .brand { color: #6FC3DF; font-weight: 700; font-size: 18px; }
+  nav .title { color: #999; font-size: 14px; }
+  .container { max-width: 800px; margin: 0 auto; padding: 24px 16px; }
+  h1 { color: #6FC3DF; font-size: 28px; margin-bottom: 8px; }
+  h2 { color: #6FC3DF; font-size: 20px; margin: 32px 0 12px; border-bottom: 1px solid #333; padding-bottom: 8px; }
+  .section { background: #1A1A1A; border-radius: 8px; padding: 20px; margin: 16px 0; }
+  .check { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-bottom: 1px solid #222; }
+  .check:last-child { border-bottom: none; }
+  .pass { color: #22c55e; font-weight: 700; font-size: 14px; min-width: 40px; }
+  .fail { color: #ef4444; font-weight: 700; font-size: 14px; min-width: 40px; }
+  .desc { color: #ccc; font-size: 14px; }
+  .detail { color: #888; font-size: 12px; margin-top: 2px; }
+  .summary { background: #0f2d1a; border: 1px solid #22c55e33; border-radius: 8px; padding: 20px; margin: 24px 0; text-align: center; }
+  .summary .big { font-size: 48px; font-weight: 700; color: #22c55e; }
+  .summary .label { color: #888; font-size: 14px; margin-top: 4px; }
+  footer { text-align: center; color: #555; font-size: 12px; margin-top: 48px; padding: 24px; border-top: 1px solid #222; }
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="brand">Be</span>
+  <span class="title">Test — Boards 3-5</span>
+</nav>
+
+<div class="container">
+  <h1>Test: Search Settings + Real-time Sync</h1>
+  <p style="color:#999;">Boards 3-5, 30 pts — 12 checks</p>
+
+  <div class="summary">
+    <div class="big">12/12</div>
+    <div class="label">All checks pass</div>
+  </div>
+
+  <div class="section">
+    <h2>Build Integrity (2 checks)</h2>
+    <div class="check">
+      <span class="pass">PASS</span>
+      <div>
+        <div class="desc">TypeScript compiles with zero errors</div>
+        <div class="detail">npx tsc --noEmit — clean</div>
+      </div>
+    </div>
+    <div class="check">
+      <span class="pass">PASS</span>
+      <div>
+        <div class="desc">Production build succeeds</div>
+        <div class="detail">npx vite build — 1537 modules, 15.6s, dist output clean</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Board 3 — Search Settings + Supabase (3 checks)</h2>
+    <div class="check">
+      <span class="pass">PASS</span>
+      <div>
+        <div class="desc">AppSettings includes searchRadius, searchRegions, resultsPerSource</div>
+        <div class="detail">settings.ts — defaults: 150mi, ['socal'], 15 results</div>
+      </div>
+    </div>
+    <div class="check">
+      <span class="pass">PASS</span>
+      <div>
+        <div class="desc">API accepts regions + maxResults in POST body</div>
+        <div class="detail">api/fetch-comps.js destructures { regions, maxResults } from req.body</div>
+      </div>
+    </div>
+    <div class="check">
+      <span class="pass">PASS</span>
+      <div>
+        <div class="desc">Supabase client exports supabase (nullable) + isSupabaseConfigured()</div>
+        <div class="detail">src/lib/supabase.ts — VITE_ prefix on env vars, graceful null when unconfigured</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Board 4 — Real-time Sync (4 checks)</h2>
+    <div class="check">
+      <span class="pass">PASS</span>
+      <div>
+        <div class="desc">syncClient exports all 16 required functions</div>
+        <div class="detail">createRoom, joinRoom, leaveRoom, pushOverlay, pullAllOverlays, getRecentActivity, flushOfflineQueue, autoRejoin, onOverlayChanged, onActivityReceived, onPresenceChanged, onConnectionStatus, getCurrentRoom, getCurrentNickname, getSavedSync, isInRoom</div>
+      </div>
+    </div>
+    <div class="check">
+      <span class="pass">PASS</span>
+      <div>
+        <div class="desc">saveItem() diffs syncable fields and pushes overlay when in room</div>
+        <div class="detail">db.ts — accepts oldItem?, checks isInRoom(), calls pushOverlay() on status/maxBid/note/buddyTag changes</div>
+      </div>
+    </div>
+    <div class="check">
+      <span class="pass">PASS</span>
+      <div>
+        <div class="desc">applyOverlay() writes directly to IndexedDB (no sync loop)</div>
+        <div class="detail">db.ts — uses store.put() directly, not saveItem(), preventing infinite echo</div>
+      </div>
+    </div>
+    <div class="check">
+      <span class="pass">PASS</span>
+      <div>
+        <div class="desc">Shared comps cache: check Supabase before Apify, push after fetch</div>
+        <div class="detail">multiSourceComps.ts — getSharedComps() before API call, pushSharedComps() after results</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Board 5 — Sync UX + Offline (3 checks)</h2>
+    <div class="check">
+      <span class="pass">PASS</span>
+      <div>
+        <div class="desc">Offline queue: queueOfflineEdit on push failure, flushOfflineQueue on reconnect</div>
+        <div class="detail">syncClient.ts — localStorage key 'bid-buddy-offline-queue', autoRejoin calls flush</div>
+      </div>
+    </div>
+    <div class="check">
+      <span class="pass">PASS</span>
+      <div>
+        <div class="desc">Room UI: create/join/leave + presence + activity feed in SettingsScreen</div>
+        <div class="detail">SettingsScreen.tsx — Buddy Room section with name input, 6-digit code, buddy list, live feed. Conditional on isSupabaseConfigured()</div>
+      </div>
+    </div>
+    <div class="check">
+      <span class="pass">PASS</span>
+      <div>
+        <div class="desc">Sync status dot in App with room code, links to Settings</div>
+        <div class="detail">App.tsx — syncConnected state, floating pill renders green dot + room code, onClick opens Settings</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>Generated 2026-04-03 00:50</footer>
+</body>
+</html>
