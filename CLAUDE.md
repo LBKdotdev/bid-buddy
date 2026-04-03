@@ -84,9 +84,19 @@ Dark motorsport theme defined in `tailwind.config.js`:
 2. **fetch-comps.js** — Multi-source comps aggregator (eBay + Apify CL/FB)
 3. **scan-tag.js** — OCR via Groq Vision API
 
+## Supabase (Shared State — In Progress)
+
+Scotty's existing Supabase project "LBKdotdev's Project" is being used for multi-user real-time sync. Previously it only hosted edge function CORS proxies (removed in Board 2). Now being used properly as a database.
+
+- **Project:** LBKdotdev's Project (paused Mar 28, resumed Apr 3 2026)
+- **Purpose:** Room-based real-time sync — status, maxBid, notes, buddyTag shared across devices
+- **Tables:** rooms, item_overlays, shared_comps, activity (schema in Board 3)
+- **Free tier:** 500MB DB, 50K users, real-time included
+- **Env vars needed:** `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY` in `.env.local` and Vercel dashboard
+
 ## Environment Variables
 
-`.env` contains Groq API key and Apify token. This file is gitignored.
+`.env` contains Groq API key and Apify token. `.env.local` will contain Supabase keys. Both are gitignored.
 
 ## Comps Variant Filtering
 
