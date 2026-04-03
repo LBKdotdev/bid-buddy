@@ -135,8 +135,8 @@ export default function SettingsScreen({ onBack }: SettingsScreenProps) {
       {/* Header */}
       <div className="sticky top-0 z-10 bg-surface-900/90 backdrop-blur-xl border-b border-surface-500/30">
         <div className="flex items-center gap-3 px-4 py-3 pt-12">
-          <button onClick={onBack} className="p-2 -ml-2 text-zinc-400 active:text-white">
-            <ArrowLeft size={22} />
+          <button onClick={onBack} className="w-12 h-12 flex items-center justify-center -ml-2 text-zinc-400 active:text-white active:bg-surface-600 rounded-xl">
+            <ArrowLeft size={24} />
           </button>
           <h1 className="text-lg font-semibold text-white flex-1">Settings</h1>
           {saved && (

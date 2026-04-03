@@ -92,10 +92,10 @@ export default function AllListingsScreen({ onBack, onSelectItem }: AllListingsS
     <div className="min-h-screen bg-surface-900 pb-24">
       {/* Header */}
       <div className="bg-surface-800 border-b border-surface-500/30 sticky top-0 z-10">
-        <div className="flex items-center gap-3 px-4 py-4">
+        <div className="flex items-center gap-3 px-4 py-4 pt-12">
           <button
             onClick={onBack}
-            className="w-10 h-10 flex items-center justify-center -ml-2 text-electric"
+            className="w-12 h-12 flex items-center justify-center -ml-2 text-electric active:bg-surface-600 rounded-xl"
           >
             <ArrowLeft size={24} />
           </button>
