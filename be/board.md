@@ -48,11 +48,11 @@ Source: plan-shared-state-supabase.html → estimate-shared-state-supabase.html
 ## Board 4 — Real-time Sync (15 pts)
 
 ### Ready
-- {room create + join + nickname system, add to, src/services/syncClient} · 5 pts · ~a
 - {real-time item overlay subscription + upsert on save, add to, syncClient + db.ts} · 5 pts · ~a
 - {shared comps cache — push to Supabase after fetch + check before Apify, update in, multiSourceComps} · 5 pts · ~u
 
 ### In Progress
+- {room create + join + nickname system, add to, src/services/syncClient} · 5 pts · ~a
 
 ### Done
 
