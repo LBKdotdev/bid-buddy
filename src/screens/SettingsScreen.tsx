@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Wifi, WifiOff, Brain, Database, BarChart3, RotateCcw, Trash2, Check, Info, Activity } from 'lucide-react';
+import { ArrowLeft, Wifi, WifiOff, Brain, Database, BarChart3, RotateCcw, Trash2, Check, Info, Activity, MapPin } from 'lucide-react';
 import { getSettings, saveSettings, resetSettings, clearAllCaches, type AppSettings } from '../utils/settings';
 import { getMonthlyStats, setMonthlyBudget } from '../utils/apifyUsage';
 
@@ -214,6 +214,105 @@ export default function SettingsScreen({ onBack }: SettingsScreenProps) {
                   </button>
                 </label>
               ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Search Area */}
+        <section>
+          <div className="flex items-center gap-2 mb-3">
+            <MapPin size={16} className="text-electric" />
+            <h2 className="text-sm font-semibold text-zinc-300 uppercase tracking-wider">Search Area</h2>
+          </div>
+          <div className="card divide-y divide-surface-500/30">
+            {/* Radius */}
+            <div className="p-4">
+              <div className="flex items-center justify-between">
+                <label className="text-sm text-zinc-300 font-medium">Search Radius</label>
+                <span className="text-sm text-electric font-mono">{settings.searchRadius} mi</span>
+              </div>
+              <p className="text-xs text-zinc-500 mt-0.5 mb-3">
+                How far to search for comps from your area
+              </p>
+              <input
+                type="range"
+                min="50"
+                max="300"
+                step="25"
+                value={settings.searchRadius}
+                onChange={(e) => update({ searchRadius: parseInt(e.target.value) })}
+                className="w-full accent-electric"
+              />
+              <div className="flex justify-between text-xs text-zinc-600 mt-1">
+                <span>50mi</span>
+                <span>150mi</span>
+                <span>300mi</span>
+              </div>
+            </div>
+
+            {/* Results per source */}
+            <div className="p-4">
+              <div className="flex items-center justify-between">
+                <label className="text-sm text-zinc-300 font-medium">Results per Source</label>
+                <span className="text-sm text-electric font-mono">{settings.resultsPerSource}</span>
+              </div>
+              <p className="text-xs text-zinc-500 mt-0.5 mb-3">
+                Max listings to pull from each source
+              </p>
+              <input
+                type="range"
+                min="5"
+                max="50"
+                step="5"
+                value={settings.resultsPerSource}
+                onChange={(e) => update({ resultsPerSource: parseInt(e.target.value) })}
+                className="w-full accent-electric"
+              />
+              <div className="flex justify-between text-xs text-zinc-600 mt-1">
+                <span>5</span>
+                <span>25</span>
+                <span>50</span>
+              </div>
+            </div>
+
+            {/* Regions */}
+            <div className="p-4">
+              <label className="text-sm text-zinc-300 font-medium mb-3 block">Regions</label>
+              {([
+                { key: 'socal', label: 'SoCal (OC, IE, SD)' },
+                { key: 'norcal', label: 'NorCal (Bay, Sac)' },
+                { key: 'phoenix', label: 'Phoenix / Tucson' },
+                { key: 'vegas', label: 'Las Vegas' },
+                { key: 'dallas', label: 'Dallas / Fort Worth' },
+                { key: 'houston', label: 'Houston / Austin' },
+                { key: 'orlando', label: 'Orlando / Tampa' },
+              ] as const).map(({ key, label }) => (
+                <label key={key} className="flex items-center justify-between py-2">
+                  <span className="text-sm text-zinc-400">{label}</span>
+                  <button
+                    onClick={() => {
+                      const current = settings.searchRegions || ['socal'];
+                      const next = current.includes(key)
+                        ? current.filter(r => r !== key)
+                        : [...current, key];
+                      // Must have at least one region
+                      if (next.length > 0) update({ searchRegions: next });
+                    }}
+                    className={`w-11 h-6 rounded-full transition-all relative ${
+                      (settings.searchRegions || ['socal']).includes(key) ? 'bg-electric' : 'bg-surface-500'
+                    }`}
+                  >
+                    <div
+                      className={`w-5 h-5 rounded-full bg-white absolute top-0.5 transition-all ${
+                        (settings.searchRegions || ['socal']).includes(key) ? 'left-[22px]' : 'left-0.5'
+                      }`}
+                    />
+                  </button>
+                </label>
+              ))}
+              <p className="text-xs text-zinc-600 mt-2">
+                More regions = more results but higher Apify cost
+              </p>
             </div>
           </div>
         </section>

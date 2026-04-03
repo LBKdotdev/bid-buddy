@@ -34,12 +34,12 @@ Source: plan-pdf-import-overhaul.html → estimate-pdf-import-overhaul.html
 Source: plan-shared-state-supabase.html → estimate-shared-state-supabase.html
 
 ### Ready
-- {search radius + region + results-per-source settings, add to, AppSettings + SettingsScreen} · 5 pts · ~a
 - {search params passthrough, update in, multiSourceComps + fetch-comps API} · 3 pts · ~u
 - {Supabase tables — rooms + item_overlays + shared_comps + activity, add to, Supabase project} · 5 pts · ~a
 - {Supabase JS client + env vars + connection verify, add to, bid-buddy} · 3 pts · ~a
 
 ### In Progress
+- {search radius + region + results-per-source settings, add to, AppSettings + SettingsScreen} · 5 pts · ~a
 
 ### Done
 

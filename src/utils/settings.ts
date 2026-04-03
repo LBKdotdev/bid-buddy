@@ -16,6 +16,9 @@ export interface AppSettings {
     cycletrader: boolean;
     craigslist: boolean;
   };
+  searchRadius: number; // miles (50-300)
+  searchRegions: string[]; // e.g. ['socal', 'phoenix', 'vegas']
+  resultsPerSource: number; // max results per source (5-50)
 
   // Display
   maxBidPercent: number; // percent of AI mid estimate for suggested max bid
@@ -37,6 +40,9 @@ const DEFAULT_SETTINGS: AppSettings = {
     cycletrader: true,
     craigslist: true,
   },
+  searchRadius: 150,
+  searchRegions: ['socal'],
+  resultsPerSource: 15,
 
   maxBidPercent: 75,
 
