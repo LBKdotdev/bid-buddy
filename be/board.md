@@ -18,8 +18,6 @@
 Source: plan-pdf-import-overhaul.html → estimate-pdf-import-overhaul.html
 
 ### Ready
-- {PDF import with real NPA catalogs, test across, motorcycle + RVM} · 3 pts · ~t
-
 ### In Progress
 
 ### Done
@@ -27,3 +25,4 @@ Source: plan-pdf-import-overhaul.html → estimate-pdf-import-overhaul.html
 - {auto-detect catalog type from filename + full field extraction, update in, pdfParser.ts} · 5 pts · ~u ✅
 - {RVM block parser with all structured fields, update in, pdfParser.ts} · 5 pts · ~u ✅ (included in parser rewrite)
 - {supabase/ folder + SDK dep + stale CLAUDE.md refs, remove from, bid-buddy} · 3 pts · ~d ✅
+- {PDF import with real NPA catalogs, test across, motorcycle + RVM} · 3 pts · ~t ✅

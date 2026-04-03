@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Build — PDF Import Overhaul (Board 2)</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #111111; color: #e0e0e0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 1.6; }
+  nav { position: sticky; top: 0; background: #000; border-bottom: 2px solid #6FC3DF; padding: 12px 24px; z-index: 100; display: flex; align-items: center; gap: 16px; }
+  nav .brand { color: #6FC3DF; font-weight: 700; font-size: 18px; }
+  nav .title { color: #999; font-size: 14px; }
+  .container { max-width: 800px; margin: 0 auto; padding: 24px 16px; }
+  h1 { color: #6FC3DF; font-size: 28px; margin-bottom: 8px; }
+  h2 { color: #6FC3DF; font-size: 20px; margin: 32px 0 12px; border-bottom: 1px solid #333; padding-bottom: 8px; }
+  .section { background: #1A1A1A; border-radius: 8px; padding: 20px; margin: 16px 0; }
+  ul { margin: 8px 0 8px 24px; }
+  li { margin: 4px 0; }
+  code { background: #2a2a2a; padding: 2px 6px; border-radius: 3px; font-size: 13px; }
+  .pass { color: #4ade80; }
+  footer { text-align: center; color: #555; font-size: 12px; margin-top: 48px; padding: 24px; border-top: 1px solid #222; }
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="brand">Be</span>
+  <span class="title">Build — PDF Import Overhaul (Board 2)</span>
+</nav>
+
+<div class="container">
+  <h1>Board 2 Complete — PDF Import Overhaul</h1>
+  <p style="color:#999;">5 items, 19 pts, 4 commits</p>
+
+  <div class="section">
+    <h2>What Was Built</h2>
+    <ul>
+      <li class="pass">Added 4 new fields to InventoryItem: color, zone, bookValue, conditionDetail</li>
+      <li class="pass">Rewrote motorcycle parser — captures zone, subscores (EM/FR/TR in any order), book value, DMV penalties, CPO candidates</li>
+      <li class="pass">Rewrote RVM parser — block-based extraction of all structured fields (VIN, CR, color, book value, mi/hr, condition issues)</li>
+      <li class="pass">Auto-detect catalog type from filename (RVM prefix → rv_marine, else → motorcycles)</li>
+      <li class="pass">Category auto-detection via detectCategory() for all parsed items (SxS in moto catalog, PWC in RVM)</li>
+      <li class="pass">Removed supabase/ folder (15 files), @supabase/supabase-js dep, all stale references</li>
+      <li class="pass">Updated CLAUDE.md — architecture now reflects Vercel serverless, not Supabase</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>Decisions Made</h2>
+    <ul>
+      <li>Filename-based auto-detect over manual picker — NPA filenames are consistent ("RVM" prefix = RVM catalog)</li>
+      <li>Order-independent subscore regex — NPA varies EM/FR/TR order and uses MTR= for electric</li>
+      <li>conditionDetail for RVM captures only low-scoring items (&lt;7) — the issues worth knowing about</li>
+      <li>bookValue stored as structured number, not buried in notes string — enables sorting/filtering later</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>Files Changed</h2>
+    <ul>
+      <li><code>src/types/inventory.ts</code> — 4 new nullable fields</li>
+      <li><code>src/utils/pdfParser.ts</code> — full rewrite (280 lines, both parsers + auto-detect)</li>
+      <li><code>src/utils/csv.ts</code> — new fields in csvRowToInventoryItem</li>
+      <li><code>src/screens/HomeScreen.tsx</code> — new fields in PDF import flow</li>
+      <li><code>src/screens/ScanScreen.tsx</code> — new fields in camera scan</li>
+      <li><code>src/screens/ImportScreen.tsx</code> — parsePDF → parseCatalogPDF</li>
+      <li><code>src/screens/SettingsScreen.tsx</code> — supabase → vercel references</li>
+      <li><code>src/utils/settings.ts</code> — syncMode: vercel</li>
+      <li><code>src/services/multiSourceComps.ts</code> — comment cleanup</li>
+      <li><code>src/utils/kittyCompsProvider.ts</code> — comment cleanup</li>
+      <li><code>package.json</code> — removed @supabase/supabase-js</li>
+      <li><code>CLAUDE.md</code> — full architecture update</li>
+      <li><code>supabase/</code> — deleted (15 files)</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>Board Status</h2>
+    <p>Board 2: <span class="pass">5/5 Done</span> — all boards complete</p>
+  </div>
+
+</div>
+
+<footer>Generated 2026-04-02 23:59</footer>
+
+</body>
+</html>

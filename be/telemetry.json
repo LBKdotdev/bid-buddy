@@ -89,5 +89,31 @@
     "tokens": null,
     "cost_usd": null,
     "commit": null
+  },
+  {
+    "triple": "{Board 2, built in, bid-buddy}",
+    "command": "~b",
+    "description": "Board 2 complete — PDF import overhaul, 5 items, supabase removed",
+    "project": "bid-buddy",
+    "repo": "LBKdotdev/bid-buddy",
+    "date": "2026-04-02",
+    "time": "23:59",
+    "duration_sec": 600,
+    "tokens": null,
+    "cost_usd": null,
+    "commit": null
+  },
+  {
+    "triple": "{PDF import, tested in, bid-buddy}",
+    "command": "~t",
+    "description": "Test — 569 moto + 27 RVM items, all fields pass against real NPA PDFs",
+    "project": "bid-buddy",
+    "repo": "LBKdotdev/bid-buddy",
+    "date": "2026-04-02",
+    "time": "23:59",
+    "duration_sec": 120,
+    "tokens": null,
+    "cost_usd": null,
+    "commit": null
   }
 ]

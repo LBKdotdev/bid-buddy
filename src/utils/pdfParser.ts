@@ -160,19 +160,15 @@ function parseMotoItem(block: string, itemNumber: string, zone: string): Partial
   item.year = parseInt(headerMatch[1]);
   item.make = headerMatch[2];
 
-  // Extract CR score and subscores: "73: EM=9, FR=8, TR=9"
-  const crMatch = block.match(/(\d{2,3}):\s*(EM=\d+[,\s]*FR=\d+[,\s]*TR=\d+)/);
+  // Extract CR score and subscores — order varies: "73: EM=9, FR=8, TR=9" or "76: EM=5, TR=9, FR=8" or "87: TR=9, FR=9, MTR=9"
+  const crMatch = block.match(/(\d{2,3}):\s*((?:[A-Z]+=\d+[,\s]*){2,})/);
   if (crMatch) {
     item.crScore = parseInt(crMatch[1]);
-    item.conditionDetail = crMatch[2].replace(/\s+/g, '');
-  } else {
-    // Try just the score without subscores
-    const scoreOnly = block.match(/(\d{2,3}):\s*EM=/);
-    if (scoreOnly) item.crScore = parseInt(scoreOnly[1]);
+    item.conditionDetail = crMatch[2].replace(/\s+/g, '').replace(/,$/, '');
   }
 
-  // VIN — typically 8 alphanumeric chars before the CR score
-  const vinMatch = block.match(/\s([A-Z0-9][A-Z0-9]{5,9})\s+\d{2,3}:/);
+  // VIN — alphanumeric chars before the CR score pattern
+  const vinMatch = block.match(/\s([A-Z0-9][A-Z0-9]{5,9})\s+\d{2,3}:\s*[A-Z]+=/);
   if (vinMatch) {
     item.vin = vinMatch[1];
   }
@@ -180,7 +176,7 @@ function parseMotoItem(block: string, itemNumber: string, zone: string): Partial
   // Mileage — number or TMU/EXP before VIN
   const milesPattern = item.vin
     ? new RegExp(`\\s(\\d{1,6}|TMU|EXP)\\s+${item.vin}`)
-    : /\s(\d{1,6}|TMU|EXP)\s+[A-Z0-9][A-Z0-9]{5,9}\s+\d{2,3}:/;
+    : /\s(\d{1,6}|TMU|EXP)\s+[A-Z0-9][A-Z0-9]{5,9}\s+\d{2,3}:\s*[A-Z]+=/;
 
   const milesMatch = block.match(milesPattern);
   if (milesMatch) {

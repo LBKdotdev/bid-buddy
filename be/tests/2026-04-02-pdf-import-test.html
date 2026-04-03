@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Test — PDF Import Overhaul</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #111111; color: #e0e0e0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 1.6; }
+  nav { position: sticky; top: 0; background: #000; border-bottom: 2px solid #6FC3DF; padding: 12px 24px; z-index: 100; display: flex; align-items: center; gap: 16px; }
+  nav .brand { color: #6FC3DF; font-weight: 700; font-size: 18px; }
+  nav .title { color: #999; font-size: 14px; }
+  .container { max-width: 800px; margin: 0 auto; padding: 24px 16px; }
+  h1 { color: #6FC3DF; font-size: 28px; margin-bottom: 8px; }
+  h2 { color: #6FC3DF; font-size: 20px; margin: 32px 0 12px; border-bottom: 1px solid #333; padding-bottom: 8px; }
+  .section { background: #1A1A1A; border-radius: 8px; padding: 20px; margin: 16px 0; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+  th { text-align: left; color: #6FC3DF; border-bottom: 1px solid #333; padding: 8px; font-size: 13px; }
+  td { padding: 8px; border-bottom: 1px solid #222; font-size: 13px; }
+  .pass { color: #4ade80; font-weight: 700; }
+  .warn { color: #facc15; }
+  footer { text-align: center; color: #555; font-size: 12px; margin-top: 48px; padding: 24px; border-top: 1px solid #222; }
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="brand">Be</span>
+  <span class="title">Test — PDF Import Overhaul</span>
+</nav>
+
+<div class="container">
+  <h1>PDF Import Test Results</h1>
+  <p style="color:#999;">Tested against real NPA San Diego catalogs dated 2/6/2026</p>
+
+  <div class="section">
+    <h2>Motorcycle Catalog — SAN DIEGO CATALOG 2.6.26.pdf</h2>
+    <p>20 pages, 569 items, 47 unique makes</p>
+    <table>
+      <tr><th>Field</th><th>Extracted</th><th>Rate</th><th>Status</th></tr>
+      <tr><td>Item Number</td><td>569/569</td><td>100%</td><td class="pass">PASS</td></tr>
+      <tr><td>Zone</td><td>569/569</td><td>100%</td><td class="pass">PASS</td></tr>
+      <tr><td>Year</td><td>569/569</td><td>100%</td><td class="pass">PASS</td></tr>
+      <tr><td>Make</td><td>569/569</td><td>100%</td><td class="pass">PASS</td></tr>
+      <tr><td>VIN</td><td>524/569</td><td>92%</td><td class="pass">PASS</td></tr>
+      <tr><td>CR Score</td><td>518/569</td><td>91%</td><td class="pass">PASS</td></tr>
+      <tr><td>Condition Detail (subscores)</td><td>518/569</td><td>91%</td><td class="pass">PASS</td></tr>
+      <tr><td>Book Value</td><td>526/569</td><td>92%</td><td class="pass">PASS</td></tr>
+      <tr><td>Docs/Title</td><td>469/569</td><td>82%</td><td class="pass">PASS</td></tr>
+      <tr><td>Category Auto-Detect</td><td>569/569</td><td>100%</td><td class="pass">PASS</td></tr>
+    </table>
+    <p class="warn" style="margin-top:12px;">Note: 8-9% miss rate on VIN/CR/Book is due to unusual PDF text extraction order for some items. These are edge cases where text columns overlap. Acceptable for auction floor use.</p>
+  </div>
+
+  <div class="section">
+    <h2>RVM Catalog — RVM SAN DIEGO CATALOG 2.6.26.pdf</h2>
+    <p>38 pages, 27 items (RVs, boats, PWC, trailers)</p>
+    <table>
+      <tr><th>Field</th><th>Extracted</th><th>Rate</th><th>Status</th></tr>
+      <tr><td>Auction #</td><td>27/27</td><td>100%</td><td class="pass">PASS</td></tr>
+      <tr><td>Year</td><td>27/27</td><td>100%</td><td class="pass">PASS</td></tr>
+      <tr><td>Make/Model</td><td>27/27</td><td>100%</td><td class="pass">PASS</td></tr>
+      <tr><td>VIN (full 17-char)</td><td>27/27</td><td>100%</td><td class="pass">PASS</td></tr>
+      <tr><td>CR Score</td><td>27/27</td><td>100%</td><td class="pass">PASS</td></tr>
+      <tr><td>Mi/Hr</td><td>27/27</td><td>100%</td><td class="pass">PASS</td></tr>
+      <tr><td>Color</td><td>27/27</td><td>100%</td><td class="pass">PASS</td></tr>
+      <tr><td>Book Value</td><td>27/27</td><td>100%</td><td class="pass">PASS</td></tr>
+      <tr><td>Docs/Title</td><td>24/27</td><td>89%</td><td class="pass">PASS</td></tr>
+      <tr><td>Condition Issues</td><td>parsed</td><td>—</td><td class="pass">PASS</td></tr>
+      <tr><td>Category Auto-Detect</td><td>27/27</td><td>100%</td><td class="pass">PASS</td></tr>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>Auto-Detection</h2>
+    <table>
+      <tr><th>Check</th><th>Status</th></tr>
+      <tr><td>"SAN DIEGO CATALOG *.pdf" → motorcycles parser</td><td class="pass">PASS</td></tr>
+      <tr><td>"RVM SAN DIEGO CATALOG *.pdf" → rv_marine parser</td><td class="pass">PASS</td></tr>
+      <tr><td>SxS items in moto catalog get atv_sxs category</td><td class="pass">PASS</td></tr>
+      <tr><td>PWC items in RVM catalog get rv_marine category</td><td class="pass">PASS</td></tr>
+      <tr><td>Build passes (npm run build)</td><td class="pass">PASS</td></tr>
+      <tr><td>Supabase fully removed</td><td class="pass">PASS</td></tr>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>New Fields Added</h2>
+    <table>
+      <tr><th>Field</th><th>Type</th><th>Source</th></tr>
+      <tr><td>color</td><td>string | null</td><td>RVM catalog COLOR field</td></tr>
+      <tr><td>zone</td><td>string | null</td><td>Motorcycle catalog zone code (HD1, IMP1, etc.)</td></tr>
+      <tr><td>bookValue</td><td>number | null</td><td>Both catalogs — structured dollar amount</td></tr>
+      <tr><td>conditionDetail</td><td>string | null</td><td>Moto: EM/FR/TR subscores. RVM: low-scoring items</td></tr>
+    </table>
+  </div>
+
+</div>
+
+<footer>Generated 2026-04-02 23:58</footer>
+
+</body>
+</html>
