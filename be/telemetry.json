@@ -128,5 +128,18 @@
     "tokens": null,
     "cost_usd": null,
     "commit": null
+  },
+  {
+    "triple": "{PDF import overhaul, retro'd in, bid-buddy}",
+    "command": "~r",
+    "description": "Retro — ~GO chain, Board 2, 7 commits, no fix loop needed",
+    "project": "bid-buddy",
+    "repo": "LBKdotdev/bid-buddy",
+    "date": "2026-04-03",
+    "time": "00:05",
+    "duration_sec": 60,
+    "tokens": null,
+    "cost_usd": null,
+    "commit": null
   }
 ]
