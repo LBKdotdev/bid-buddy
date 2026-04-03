@@ -2,6 +2,8 @@
 // Sources: eBay Sold (free), Facebook Marketplace (Apify), Craigslist (Apify)
 import { logApifySearch } from '../utils/apifyUsage';
 import { getSettings } from '../utils/settings';
+import { supabase } from '../lib/supabase';
+import { getCurrentRoom } from './syncClient';
 
 export interface Comp {
   title: string;
@@ -95,6 +97,66 @@ interface CacheEntry {
   timestamp: number;
 }
 
+// --- Shared comps via Supabase (room-aware) ---
+
+function hashQuery(q: string): string {
+  // Simple hash for cache key — deterministic, fast
+  let hash = 0;
+  for (let i = 0; i < q.length; i++) {
+    hash = ((hash << 5) - hash + q.charCodeAt(i)) | 0;
+  }
+  return 'q' + Math.abs(hash).toString(36);
+}
+
+async function getSharedComps(queryKey: string): Promise<MultiSourceResult | null> {
+  const room = getCurrentRoom();
+  if (!supabase || !room) return null;
+
+  try {
+    const { data } = await supabase
+      .from('shared_comps')
+      .select('results_json, created_at')
+      .eq('room_code', room)
+      .eq('query_hash', hashQuery(queryKey))
+      .single();
+
+    if (!data) return null;
+
+    // Check freshness — same 60 min window
+    const age = Date.now() - new Date(data.created_at).getTime();
+    if (age > CACHE_DURATION) return null;
+
+    const result = data.results_json as MultiSourceResult;
+    if (result && result.comps && result.comps.length > 0) {
+      console.log('Using shared comps from room for:', queryKey, '- count:', result.comps.length);
+      return { ...result, fromCache: true };
+    }
+  } catch {
+    // Not found or error — fall through
+  }
+  return null;
+}
+
+async function pushSharedComps(queryKey: string, result: MultiSourceResult): Promise<void> {
+  const room = getCurrentRoom();
+  if (!supabase || !room || result.comps.length === 0) return;
+
+  try {
+    await supabase.from('shared_comps').upsert(
+      {
+        room_code: room,
+        query_hash: hashQuery(queryKey),
+        query_text: queryKey,
+        results_json: result,
+      },
+      { onConflict: 'room_code,query_hash' }
+    );
+    console.log('Pushed', result.comps.length, 'shared comps for:', queryKey);
+  } catch (e) {
+    console.error('Push shared comps failed:', e);
+  }
+}
+
 export async function searchCompsWithCache(
   query: string,
   zip?: string,
@@ -105,8 +167,8 @@ export async function searchCompsWithCache(
   const sourcesKey = (enabledSources || ['ebay']).sort().join(',');
   const cacheKey = `${query.toLowerCase().trim()}|${zip || 'default'}|${sourcesKey}`;
 
-  // Check localStorage cache (unless force refresh)
   if (!forceRefresh) {
+    // 1. Check local localStorage cache
     try {
       const cached = localStorage.getItem(`${CACHE_KEY}-${cacheKey}`);
       if (cached) {
@@ -119,13 +181,17 @@ export async function searchCompsWithCache(
     } catch (_e) {
       // Cache miss or parse error
     }
+
+    // 2. Check shared comps from room (saves Apify $$ if a buddy already searched)
+    const shared = await getSharedComps(cacheKey);
+    if (shared) return shared;
   }
 
-  // Fetch fresh
+  // 3. Fetch fresh from Apify/eBay
   console.log('Fetching fresh comps for:', query);
   const result = await searchAllSources(query, zip, radius, enabledSources);
 
-  // Only cache if we got results
+  // Cache locally + share with room
   if (result.comps.length > 0) {
     try {
       const entry: CacheEntry = {
@@ -138,6 +204,9 @@ export async function searchCompsWithCache(
     } catch (e) {
       console.warn('Failed to cache comps:', e);
     }
+
+    // Push to Supabase for room buddies
+    pushSharedComps(cacheKey, result);
   } else {
     console.log('Not caching empty result for:', query);
   }
