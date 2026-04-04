@@ -18,12 +18,26 @@ function withTimeout(promise, ms, fallback) {
   ]);
 }
 
+// eBay category map by item type
+// 6024 = Motorcycles/Powersports, 50054 = RVs & Campers, 26429 = Trailers
+function getEbayCategory(category) {
+  if (category === 'rv_marine') return '50054';
+  if (category === 'golf') return '6024'; // golf carts live under powersports
+  return '6024'; // motorcycles, atv_sxs
+}
+
+function getEbayMinPrice(category) {
+  if (category === 'rv_marine') return '2000'; // RVs are higher value
+  return '1000';
+}
+
 // eBay sold listings via HTML scraping (free)
 // Updated 2026-04: eBay switched from s-item to s-card classes
-async function fetchEbaySold(query, limit = 25) {
+async function fetchEbaySold(query, limit = 25, category = 'motorcycles') {
   const encodedQuery = encodeURIComponent(query);
-  // _sacat=6024 = eBay Motors, _udlo=1000 = min $1000 (vehicles only, no parts)
-  const url = `https://www.ebay.com/sch/i.html?_nkw=${encodedQuery}&LH_Complete=1&LH_Sold=1&_sop=13&_ipg=60&rt=nc&_sacat=6024&_udlo=1000`;
+  const sacat = getEbayCategory(category);
+  const minPrice = getEbayMinPrice(category);
+  const url = `https://www.ebay.com/sch/i.html?_nkw=${encodedQuery}&LH_Complete=1&LH_Sold=1&_sop=13&_ipg=60&rt=nc&_sacat=${sacat}&_udlo=${minPrice}`;
 
   try {
     const response = await fetch(url, {
@@ -149,12 +163,20 @@ async function fetchFacebookMarketplace(query, city = 'la', radius = 150, limit 
   return comps;
 }
 
+// Craigslist category map: sss = all for sale, mca = motorcycles, rva = RVs
+function getCraigslistCategory(category) {
+  if (category === 'rv_marine') return 'rva';
+  if (category === 'motorcycles' || category === 'atv_sxs') return 'mca';
+  return 'sss';
+}
+
 // Craigslist via Apify
-async function fetchCraigslistApify(query, locations, limit = 15) {
+async function fetchCraigslistApify(query, locations, limit = 15, category = 'motorcycles') {
   const perLocation = Math.max(5, Math.ceil(limit / locations.length));
+  const clCategory = getCraigslistCategory(category);
   const promises = locations.map(async (loc) => {
     const items = await runApifyActor('fatihtahta/craigslist-scraper', {
-      queries: [query], locationCode: loc, category: 'sss', hasPic: true, limit: perLocation,
+      queries: [query], locationCode: loc, category: clCategory, hasPic: true, limit: perLocation,
     }, 60);
 
     const comps = [];
@@ -266,7 +288,7 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
 
   try {
-    const { query, zip, radius, sources, regions, maxResults } = req.body;
+    const { query, zip, radius, sources, regions, maxResults, category } = req.body;
     if (!query) return res.status(400).json({ error: 'Query required' });
 
     const enabledSources = sources || ['ebay'];
@@ -274,18 +296,19 @@ export default async function handler(req, res) {
     const searchRadius = radius || 150;
     const limit = maxResults || 15;
     const hasApify = !!APIFY_TOKEN;
+    const itemCategory = category || 'motorcycles';
 
     const fetches = [];
 
     if (enabledSources.includes('ebay')) {
-      fetches.push(withTimeout(fetchEbaySold(query, limit), 30000, []).then(comps => ({ source: 'ebay', comps })));
+      fetches.push(withTimeout(fetchEbaySold(query, limit, itemCategory), 30000, []).then(comps => ({ source: 'ebay', comps })));
     }
     if (enabledSources.includes('facebook') && hasApify) {
       fetches.push(withTimeout(fetchFacebookMarketplace(query, searchLocation.city, searchRadius, limit), 50000, []).then(comps => ({ source: 'facebook', comps })));
     }
     if (enabledSources.includes('craigslist')) {
       if (hasApify) {
-        fetches.push(withTimeout(fetchCraigslistApify(query, searchLocation.craigslistLocations, limit), 50000, []).then(comps => ({ source: 'craigslist', comps })));
+        fetches.push(withTimeout(fetchCraigslistApify(query, searchLocation.craigslistLocations, limit, itemCategory), 50000, []).then(comps => ({ source: 'craigslist', comps })));
       } else {
         for (const loc of searchLocation.craigslistLocations) {
           fetches.push(withTimeout(fetchCraigslistHtml(query, loc), 15000, []).then(comps => ({ source: 'craigslist', comps })));

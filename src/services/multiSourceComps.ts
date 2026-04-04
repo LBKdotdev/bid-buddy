@@ -37,10 +37,11 @@ export async function searchAllSources(
   zip?: string,
   radius?: number,
   enabledSources?: SourceKey[],
+  itemCategory?: string,
 ): Promise<MultiSourceResult> {
   const settings = getSettings();
   const effectiveRadius = radius || settings.searchRadius;
-  console.log('Fetching comps for:', query, 'zip:', zip, 'radius:', effectiveRadius, 'sources:', enabledSources);
+  console.log('Fetching comps for:', query, 'zip:', zip, 'radius:', effectiveRadius, 'sources:', enabledSources, 'category:', itemCategory);
 
   try {
     const response = await fetch('/api/fetch-comps', {
@@ -55,6 +56,7 @@ export async function searchAllSources(
         sources: enabledSources,
         regions: settings.searchRegions,
         maxResults: settings.resultsPerSource,
+        category: itemCategory,
       }),
     });
 
@@ -163,6 +165,7 @@ export async function searchCompsWithCache(
   radius?: number,
   enabledSources?: SourceKey[],
   forceRefresh: boolean = false,
+  itemCategory?: string,
 ): Promise<MultiSourceResult> {
   const sourcesKey = (enabledSources || ['ebay']).sort().join(',');
   const cacheKey = `${query.toLowerCase().trim()}|${zip || 'default'}|${sourcesKey}`;
@@ -189,7 +192,7 @@ export async function searchCompsWithCache(
 
   // 3. Fetch fresh from Apify/eBay
   console.log('Fetching fresh comps for:', query);
-  const result = await searchAllSources(query, zip, radius, enabledSources);
+  const result = await searchAllSources(query, zip, radius, enabledSources, itemCategory);
 
   // Cache locally + share with room
   if (result.comps.length > 0) {

@@ -166,8 +166,8 @@ export default function ItemDetailScreen({ itemId, onClose }: ItemDetailScreenPr
       const searchQuery = [itemData.make, specificModel].filter(Boolean).join(' ');
       if (!searchQuery) return;
 
-      console.log('Auto-fetching comps for:', searchQuery);
-      let result = await searchCompsWithCache(searchQuery, undefined, 300, ['craigslist'], false);
+      console.log('Auto-fetching comps for:', searchQuery, 'category:', itemData.category);
+      let result = await searchCompsWithCache(searchQuery, undefined, 300, ['craigslist'], false, itemData.category);
 
       // If < 3 results, broaden and filter
       if (result.comps.length < 3) {
@@ -175,7 +175,7 @@ export default function ItemDetailScreen({ itemId, onClose }: ItemDetailScreenPr
         const broadQuery = [itemData.make, broadModel].filter(Boolean).join(' ');
         if (broadQuery !== searchQuery) {
           console.log('Broadening auto-fetch to:', broadQuery);
-          const broadResult = await searchCompsWithCache(broadQuery, undefined, 300, ['craigslist'], false);
+          const broadResult = await searchCompsWithCache(broadQuery, undefined, 300, ['craigslist'], false, itemData.category);
 
           // Filter broad results for variant match
           const allNums = itemData.model.match(/\d{3,4}/g) || [];
@@ -364,13 +364,13 @@ export default function ItemDetailScreen({ itemId, onClose }: ItemDetailScreenPr
       if (zip) localStorage.setItem('comps-zip', zip);
 
       // Try specific query first (e.g. "Can-Am Ryker 600") for accurate variant match
-      console.log('Trying specific query:', specific, 'sources:', enabledSources);
-      let result = await searchCompsWithCache(specific, zip || undefined, 300, enabledSources, forceRefresh);
+      console.log('Trying specific query:', specific, 'sources:', enabledSources, 'category:', item.category);
+      let result = await searchCompsWithCache(specific, zip || undefined, 300, enabledSources, forceRefresh, item.category);
 
       // If specific returned < 3 results, broaden search and filter client-side
       if (result.comps.length < 3 && specific !== broad) {
         console.log(`Only ${result.comps.length} results for "${specific}" — broadening to "${broad}"`);
-        const broadResult = await searchCompsWithCache(broad, zip || undefined, 300, enabledSources, forceRefresh);
+        const broadResult = await searchCompsWithCache(broad, zip || undefined, 300, enabledSources, forceRefresh, item.category);
         const filteredBroad = filterCompsForItem(broadResult.comps);
 
         // Merge: specific results first, then filtered broad results (deduped)
