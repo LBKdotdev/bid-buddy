@@ -381,9 +381,14 @@ export default function FloorScreen() {
                     </div>
                   )}
                   {item.crScore !== null && (
-                    <div className="flex justify-between py-2 border-b border-surface-500/30">
-                      <span className="text-zinc-500">CR Score</span>
-                      <span className="text-white font-medium">{item.crScore}</span>
+                    <div className="py-2 border-b border-surface-500/30">
+                      <div className="flex justify-between">
+                        <span className="text-zinc-500">CR Score</span>
+                        <span className="text-white font-medium">{item.crScore}</span>
+                      </div>
+                      {item.conditionDetail && (
+                        <div className="text-xs text-zinc-400 mt-1">{item.conditionDetail}</div>
+                      )}
                     </div>
                   )}
                   {item.milesHours && (

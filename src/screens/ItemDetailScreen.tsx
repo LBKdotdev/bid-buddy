@@ -717,31 +717,63 @@ export default function ItemDetailScreen({ itemId, onClose }: ItemDetailScreenPr
             </div>
 
             {/* CR Score — prominent display */}
-            {item.crScore !== null && (
-              <div className={`mt-3 rounded-xl p-3 flex items-center justify-between ${
-                item.crScore >= 4 ? 'bg-status-success/10 border border-status-success/30' :
-                item.crScore >= 3 ? 'bg-status-warning/10 border border-status-warning/30' :
-                'bg-status-danger/10 border border-status-danger/30'
-              }`}>
-                <div>
-                  <div className="text-zinc-400 text-xs font-medium uppercase tracking-wide">Condition Rating</div>
-                  <div className="text-zinc-500 text-xs mt-0.5">
-                    {item.crScore >= 4.5 ? 'Excellent — minimal wear' :
-                     item.crScore >= 4 ? 'Good — light wear, well maintained' :
-                     item.crScore >= 3 ? 'Fair — moderate wear, may need work' :
-                     item.crScore >= 2 ? 'Rough — significant wear, expect repairs' :
-                     'Poor — major issues likely'}
-                  </div>
-                </div>
-                <div className={`text-3xl font-bold tabular-nums ${
-                  item.crScore >= 4 ? 'text-status-success' :
-                  item.crScore >= 3 ? 'text-status-warning' :
-                  'text-status-danger'
+            {item.crScore !== null && (() => {
+              // NPA moto scores are 0-100, RVM scores may be 0-10 or 0-100
+              const is100Scale = item.crScore > 10;
+              const greenThreshold = is100Scale ? 80 : 4;
+              const yellowThreshold = is100Scale ? 60 : 3;
+              const excellentThreshold = is100Scale ? 90 : 4.5;
+              const goodThreshold = is100Scale ? 80 : 4;
+              const fairThreshold = is100Scale ? 60 : 3;
+              const roughThreshold = is100Scale ? 40 : 2;
+
+              return (
+                <div className={`mt-3 rounded-xl p-3 ${
+                  item.crScore >= greenThreshold ? 'bg-status-success/10 border border-status-success/30' :
+                  item.crScore >= yellowThreshold ? 'bg-status-warning/10 border border-status-warning/30' :
+                  'bg-status-danger/10 border border-status-danger/30'
                 }`}>
-                  {item.crScore}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-zinc-400 text-xs font-medium uppercase tracking-wide">Condition Rating</div>
+                      <div className="text-zinc-500 text-xs mt-0.5">
+                        {item.crScore >= excellentThreshold ? 'Excellent — minimal wear' :
+                         item.crScore >= goodThreshold ? 'Good — light wear, well maintained' :
+                         item.crScore >= fairThreshold ? 'Fair — moderate wear, may need work' :
+                         item.crScore >= roughThreshold ? 'Rough — significant wear, expect repairs' :
+                         'Poor — major issues likely'}
+                      </div>
+                    </div>
+                    <div className={`text-3xl font-bold tabular-nums ${
+                      item.crScore >= greenThreshold ? 'text-status-success' :
+                      item.crScore >= yellowThreshold ? 'text-status-warning' :
+                      'text-status-danger'
+                    }`}>
+                      {item.crScore}
+                    </div>
+                  </div>
+                  {item.conditionDetail && (
+                    <div className="mt-2 pt-2 border-t border-white/10 flex flex-wrap gap-2">
+                      {item.conditionDetail.split(',').map((part, i) => {
+                        const [label, val] = part.trim().split('=');
+                        const score = parseInt(val);
+                        const labelMap: Record<string, string> = { EM: 'Engine', FR: 'Frame', TR: 'Trans', MTR: 'Motor', BD: 'Body', INT: 'Interior', EXT: 'Exterior' };
+                        return (
+                          <div key={i} className="flex items-center gap-1.5 bg-surface-700/50 rounded-lg px-2 py-1">
+                            <span className="text-[10px] text-zinc-500 uppercase">{labelMap[label] || label}</span>
+                            <span className={`text-sm font-bold tabular-nums ${
+                              score >= 8 ? 'text-status-success' :
+                              score >= 6 ? 'text-status-warning' :
+                              'text-status-danger'
+                            }`}>{val}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             {item.sourceUrl && (
               <a
