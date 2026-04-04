@@ -119,7 +119,7 @@ async function runApifyActor(actorId, input, timeoutSecs = 120) {
 }
 
 // Facebook Marketplace via Apify
-async function fetchFacebookMarketplace(query, city = 'fullerton', radius = 150, limit = 15) {
+async function fetchFacebookMarketplace(query, city = 'la', radius = 150, limit = 15) {
   const searchUrl = `https://www.facebook.com/marketplace/${city}/search/?query=${encodeURIComponent(query)}&radius=${radius}`;
 
   const items = await runApifyActor('apify/facebook-marketplace-scraper', {
@@ -214,15 +214,17 @@ async function fetchCraigslistHtml(query, city) {
   return comps;
 }
 
-// Region definitions — maps region key to CL locations + FB city
+// Region definitions — maps region key to CL locations + FB city slug
+// FB slugs verified 2026-04-04: must match Facebook's internal registry
+// Invalid slugs silently redirect to generic search (zero results)
 const REGIONS = {
-  socal:   { city: 'fullerton',  cl: ['orangecounty', 'inlandempire', 'sandiego'] },
-  norcal:  { city: 'sacramento', cl: ['sfbay', 'sacramento', 'stockton'] },
-  phoenix: { city: 'phoenix',    cl: ['phoenix', 'tucson'] },
-  vegas:   { city: 'lasvegas',   cl: ['lasvegas'] },
-  dallas:  { city: 'dallas',     cl: ['dallas', 'fortworth', 'austin'] },
-  houston: { city: 'houston',    cl: ['houston', 'sanantonio', 'austin'] },
-  orlando: { city: 'orlando',    cl: ['orlando', 'tampa', 'jacksonville'] },
+  socal:   { city: 'la',           cl: ['orangecounty', 'inlandempire', 'sandiego'] },
+  norcal:  { city: 'sanfrancisco', cl: ['sfbay', 'sacramento', 'stockton'] },
+  phoenix: { city: 'phoenix',      cl: ['phoenix', 'tucson'] },
+  vegas:   { city: 'vegas',        cl: ['lasvegas'] },
+  dallas:  { city: 'dallas',       cl: ['dallas', 'fortworth', 'austin'] },
+  houston: { city: 'houston',      cl: ['houston', 'sanantonio', 'austin'] },
+  orlando: { city: 'orlando',      cl: ['orlando', 'tampa', 'jacksonville'] },
 };
 
 function getSearchLocation(zip, regions) {
@@ -242,16 +244,16 @@ function getSearchLocation(zip, regions) {
   }
 
   // Fallback: auto-detect from zip
-  if (!zip) return { city: 'fullerton', craigslistLocations: ['orangecounty', 'inlandempire', 'sandiego'] };
+  if (!zip) return { city: 'la', craigslistLocations: ['orangecounty', 'inlandempire', 'sandiego'] };
   const num = parseInt(zip.substring(0, 3));
-  if (num >= 900 && num <= 928) return { city: 'fullerton', craigslistLocations: ['orangecounty', 'inlandempire', 'sandiego'] };
-  if (num >= 930 && num <= 961) return { city: 'sacramento', craigslistLocations: ['sfbay', 'sacramento', 'stockton'] };
+  if (num >= 900 && num <= 928) return { city: 'la', craigslistLocations: ['orangecounty', 'inlandempire', 'sandiego'] };
+  if (num >= 930 && num <= 961) return { city: 'sanfrancisco', craigslistLocations: ['sfbay', 'sacramento', 'stockton'] };
   if (num >= 850 && num <= 865) return { city: 'phoenix', craigslistLocations: ['phoenix', 'tucson', 'inlandempire'] };
-  if (num >= 889 && num <= 898) return { city: 'lasvegas', craigslistLocations: ['lasvegas', 'phoenix', 'inlandempire'] };
+  if (num >= 889 && num <= 898) return { city: 'vegas', craigslistLocations: ['lasvegas', 'phoenix', 'inlandempire'] };
   if (num >= 750 && num <= 769) return { city: 'dallas', craigslistLocations: ['dallas', 'fortworth', 'austin'] };
   if (num >= 770 && num <= 779) return { city: 'houston', craigslistLocations: ['houston', 'sanantonio', 'austin'] };
   if (num >= 320 && num <= 349) return { city: 'orlando', craigslistLocations: ['orlando', 'tampa', 'jacksonville'] };
-  return { city: 'fullerton', craigslistLocations: ['orangecounty', 'inlandempire', 'sandiego'] };
+  return { city: 'la', craigslistLocations: ['orangecounty', 'inlandempire', 'sandiego'] };
 }
 
 export default async function handler(req, res) {
