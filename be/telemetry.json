@@ -271,5 +271,18 @@
     "tokens": null,
     "cost_usd": null,
     "commit": null
+  },
+  {
+    "triple": "{comp source refactor, tested in, bid-buddy}",
+    "command": "~t",
+    "description": "Test — comp source refactor: auto-fetch eBay+CL, single Deep Comps button, 8 checks pass",
+    "project": "bid-buddy",
+    "repo": "LBKdotdev/bid-buddy",
+    "date": "2026-04-05",
+    "time": "10:15",
+    "duration_sec": 180,
+    "tokens": null,
+    "cost_usd": null,
+    "commit": null
   }
 ]

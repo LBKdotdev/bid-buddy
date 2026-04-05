@@ -87,7 +87,7 @@ export default function ItemDetailScreen({ itemId, onClose }: ItemDetailScreenPr
           fetchAndCacheEstimate(found);
         }
 
-        // Auto-fetch Craigslist comps (~$0.02) so the first number they see is real
+        // Auto-fetch eBay (free) + Craigslist (~$0.02) so the first number they see is real
         // Trust > pennies — a bad first impression kills the tool
         autoFetchComps(found);
 
@@ -131,7 +131,7 @@ export default function ItemDetailScreen({ itemId, onClose }: ItemDetailScreenPr
     }
   };
 
-  // Auto-fetch comps on item open via Craigslist (~$0.02, fast)
+  // Auto-fetch comps on item open via eBay (free) + Craigslist (~$0.02)
   // Silently upgrades bid card from AI placeholder to real listing data
   const autoFetchIssues = async (itemData: InventoryItem) => {
     // Skip if cached and fresh (< 24 hours)
@@ -167,7 +167,7 @@ export default function ItemDetailScreen({ itemId, onClose }: ItemDetailScreenPr
       if (!searchQuery) return;
 
       console.log('Auto-fetching comps for:', searchQuery, 'category:', itemData.category);
-      let result = await searchCompsWithCache(searchQuery, undefined, 300, ['craigslist'], false, itemData.category);
+      let result = await searchCompsWithCache(searchQuery, undefined, 300, ['ebay', 'craigslist'], false, itemData.category);
 
       // If < 3 results, broaden and filter
       if (result.comps.length < 3) {
@@ -175,7 +175,7 @@ export default function ItemDetailScreen({ itemId, onClose }: ItemDetailScreenPr
         const broadQuery = [itemData.make, broadModel].filter(Boolean).join(' ');
         if (broadQuery !== searchQuery) {
           console.log('Broadening auto-fetch to:', broadQuery);
-          const broadResult = await searchCompsWithCache(broadQuery, undefined, 300, ['craigslist'], false, itemData.category);
+          const broadResult = await searchCompsWithCache(broadQuery, undefined, 300, ['ebay', 'craigslist'], false, itemData.category);
 
           // Filter broad results for variant match
           const allNums = itemData.model.match(/\d{3,4}/g) || [];
@@ -347,8 +347,8 @@ export default function ItemDetailScreen({ itemId, onClose }: ItemDetailScreenPr
     });
   };
 
-  // deep = true means add FB Marketplace alongside Craigslist
-  const handleRunComps = async (forceRefresh: boolean = false, deep: boolean = false) => {
+  // Deep comps = eBay (free) + Craigslist + Facebook Marketplace
+  const handleRunComps = async (forceRefresh: boolean = false) => {
     if (!item) return;
     setSayBrahLoading(true);
     setCompsLoading(true);
@@ -357,9 +357,7 @@ export default function ItemDetailScreen({ itemId, onClose }: ItemDetailScreenPr
     try {
       const { specific, broad } = getSearchQueries();
       // e.g. specific = "CAN-AM RYKER 600", broad = "CAN-AM RYKER"
-      const enabledSources: ('ebay' | 'facebook' | 'craigslist')[] = deep
-        ? ['craigslist', 'facebook']
-        : ['craigslist'];
+      const enabledSources: ('ebay' | 'facebook' | 'craigslist')[] = ['ebay', 'craigslist', 'facebook'];
 
       if (zip) localStorage.setItem('comps-zip', zip);
 
@@ -1130,22 +1128,14 @@ export default function ItemDetailScreen({ itemId, onClose }: ItemDetailScreenPr
           )}
 
           {/* Primary actions — always visible */}
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-2">
             <button
               onClick={() => handleRunComps(false)}
               disabled={sayBrahLoading}
-              className="btn-primary py-3 disabled:opacity-50 flex items-center justify-center gap-1.5 font-semibold"
+              className="py-3 disabled:opacity-50 flex items-center justify-center gap-1.5 font-semibold rounded-xl border border-amber-500/50 bg-amber-500/15 text-amber-400 active:bg-amber-500/30"
             >
-              {compsLoading && !sayBrahLoading ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />}
-              Comps
-            </button>
-            <button
-              onClick={() => handleRunComps(false, true)}
-              disabled={sayBrahLoading}
-              className="btn-secondary py-3 disabled:opacity-50 flex items-center justify-center gap-1.5 font-medium"
-            >
-              {compsLoading ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />}
-              Deep
+              {compsLoading ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />}
+              Deep Comps
             </button>
             <button
               onClick={handleKnownIssues}
