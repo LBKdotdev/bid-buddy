@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ship — Comp Source Refactor + Auction Bug Fixes</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #111111; color: #e0e0e0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 1.6; }
+  nav { position: sticky; top: 0; background: #000; border-bottom: 2px solid #6FC3DF; padding: 12px 24px; z-index: 100; display: flex; align-items: center; gap: 16px; }
+  nav .brand { color: #6FC3DF; font-weight: 700; font-size: 18px; }
+  nav .title { color: #999; font-size: 14px; }
+  .container { max-width: 800px; margin: 0 auto; padding: 24px 16px; }
+  h1 { color: #6FC3DF; font-size: 24px; margin-bottom: 8px; }
+  h2 { color: #6FC3DF; font-size: 18px; margin: 24px 0 12px; }
+  .status { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; margin-bottom: 16px; }
+  .shipped { background: #6FC3DF22; color: #6FC3DF; border: 1px solid #6FC3DF44; }
+  .section { background: #1A1A1A; border-radius: 8px; padding: 16px 20px; margin: 12px 0; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+  th { text-align: left; padding: 10px 12px; background: #1A1A1A; color: #6FC3DF; font-size: 13px; border-bottom: 1px solid #333; }
+  td { padding: 10px 12px; border-bottom: 1px solid #222; font-size: 14px; }
+  code { background: #1A1A1A; padding: 2px 6px; border-radius: 4px; font-size: 13px; color: #6FC3DF; }
+  .commit { font-family: monospace; color: #6FC3DF; font-size: 13px; }
+  ul { padding-left: 20px; margin: 8px 0; }
+  li { margin: 4px 0; }
+  footer { text-align: center; color: #555; font-size: 12px; margin-top: 48px; padding: 24px; border-top: 1px solid #222; }
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="brand">Be</span>
+  <span class="title">Ship Report</span>
+</nav>
+
+<div class="container">
+  <h1>Comp Source Refactor + Auction Bug Fixes</h1>
+  <span class="status shipped">SHIPPED</span>
+
+  <h2>What Shipped</h2>
+  <div class="section">
+    <ul>
+      <li><strong>Auto-fetch eBay (free) on item open</strong> — every item now gets real sold prices immediately at $0.00 cost, alongside Craigslist (~$0.02)</li>
+      <li><strong>Single "Deep Comps" button (yellow)</strong> — replaces two separate buttons, hits all 3 sources: eBay + Craigslist + Facebook (~$0.13)</li>
+      <li><strong>Fix Facebook Marketplace</strong> — bad city slugs (fullerton, sacramento, lasvegas) silently returned zero results at auction. Fixed with verified slugs (la, sanfrancisco, vegas)</li>
+      <li><strong>Fix condition sub-scores</strong> — EM/FR/TR scores from PDF imports now display as color-coded pills. CR score thresholds auto-detect 0-100 vs 1-5 scale</li>
+      <li><strong>Fix RV comps</strong> — eBay and Craigslist categories were hardcoded to motorcycles. Now passes item category through entire chain (sacat=50054 for RVs, rva for CL)</li>
+      <li><strong>Fix back button UX</strong> — enlarged touch targets (w-12 h-12) + safe-area padding (pt-12) across all screens</li>
+    </ul>
+  </div>
+
+  <h2>Commits Included</h2>
+  <table>
+    <tr><th>Hash</th><th>Message</th></tr>
+    <tr><td class="commit">ac14d2d</td><td>~t: comp source refactor — auto-fetch eBay+CL, single Deep Comps button, 8/8 pass</td></tr>
+    <tr><td class="commit">4a6c63b</td><td>~f: fix RV comps — wrong eBay + Craigslist categories returned zero results</td></tr>
+    <tr><td class="commit">108b3d5</td><td>~f: display condition sub-scores (EM/FR/TR) + fix CR thresholds for 0-100 scale</td></tr>
+    <tr><td class="commit">8f3e119</td><td>~f: fix Facebook Marketplace — bad city slugs silently returned zero results</td></tr>
+    <tr><td class="commit">dc87740</td><td>~f: enlarge back button touch targets + add safe-area padding on all screens</td></tr>
+  </table>
+
+  <h2>Cost Impact</h2>
+  <div class="section">
+    <table>
+      <tr><th>Action</th><th>Before</th><th>After</th></tr>
+      <tr><td>Open item (auto-fetch)</td><td>~$0.02 (CL only)</td><td>~$0.02 (eBay free + CL)</td></tr>
+      <tr><td>Comps button</td><td>~$0.02 (CL only)</td><td>removed</td></tr>
+      <tr><td>Deep Comps button</td><td>~$0.13 (CL + FB)</td><td>~$0.13 (eBay + CL + FB)</td></tr>
+    </table>
+    <p style="margin-top: 12px; color: #999; font-size: 13px;">eBay adds zero cost — free HTML scrape with $1,000 minimum filter ($2,000 for RVs). More data, same price.</p>
+  </div>
+
+  <h2>Deploy Target</h2>
+  <div class="section">
+    <p><strong>Vercel</strong> — auto-deploy from main. Already live.</p>
+    <p style="color: #999; font-size: 13px; margin-top: 8px;">Serverless function <code>api/fetch-comps.js</code> updated with category-aware eBay/CL search + fixed FB city slugs.</p>
+  </div>
+
+  <h2>RV Trader Investigation</h2>
+  <div class="section">
+    <p><strong>Result: Not viable.</strong> RV Trader blocks direct scraping (403). The only Apify actor (<code>fortuitous_pirate/powersports-scraper</code>) has 60% success rate and returned zero on 3 consecutive test runs. No other actors exist. Shipping with 3 sources — eBay, Craigslist, Facebook — which now all support RV categories.</p>
+  </div>
+</div>
+
+<footer>Generated 2026-04-05 10:20</footer>
+
+</body>
+</html>

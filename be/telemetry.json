@@ -283,6 +283,19 @@
     "duration_sec": 180,
     "tokens": null,
     "cost_usd": null,
+    "commit": "ac14d2d"
+  },
+  {
+    "triple": "{comp refactor + bug fixes, shipped from, bid-buddy}",
+    "command": "~s",
+    "description": "Ship — comp source refactor + 4 auction bug fixes, 5 commits",
+    "project": "bid-buddy",
+    "repo": "LBKdotdev/bid-buddy",
+    "date": "2026-04-05",
+    "time": "10:20",
+    "duration_sec": 60,
+    "tokens": null,
+    "cost_usd": null,
     "commit": null
   }
 ]
